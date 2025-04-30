@@ -113,7 +113,7 @@ function M.execute_build_script(args, opts)
     local args_wrapped = args and args .. "" or ""
     local uproject_path_wrapped = '"' .. uproject.path .. '"'
     local with_editor = (opts.with_editor and "-Editor " or "")
-    local standard = uproject.name .. "Editor " .. opts.platform .. " " .. opts.build_type
+    local standard = '"' .. uproject.name .. 'Editor" ' .. opts.platform .. " " .. opts.build_type
 
     local cwd
     if jit.os == "Windows" then
