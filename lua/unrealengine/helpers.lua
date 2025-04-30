@@ -75,10 +75,9 @@ function M.copy_file(src, dst)
 end
 
 --- Executes a script in a split buffer
---- @param script string The script to execute
---- @param args string The script args
+--- @param args string|nil The script args
 --- @param opts Opts Options table
-function M.execute_build_script(script, args, opts)
+function M.execute_build_script(args, opts)
     local buffer = vim.api.nvim_create_buf(false, true)
     -- vim.api.nvim_buf_set_name(buffer, " " .. selected.display)
     vim.bo[buffer].syntax = nil
@@ -107,7 +106,17 @@ function M.execute_build_script(script, args, opts)
         end
     end
 
+    local script = M.get_build_script_path(opts)
+    local uproject = M.get_uproject_path_info()
     local cmd = '"' .. script .. '" ' .. args
+        .. '"'
+        .. uproject.path
+        .. '" -game -engine '
+        .. uproject.name
+        .. "Editor "
+        .. opts.platform
+        .. " Development"
+    vim.print(cmd)
     vim.fn.jobstart(cmd, job_opts)
 end
 
