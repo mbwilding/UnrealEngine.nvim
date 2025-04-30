@@ -103,7 +103,7 @@ function M.execute_build_script(args, opts)
     local cmd = "\""
         .. script
         .. "\" "
-        .. args
+        .. args or ""
         .. "\""
         .. uproject.path
         .. "\" -game -engine "

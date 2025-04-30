@@ -22,7 +22,7 @@ return {
         {
             "<leader>ub",
             function()
-                require("unrealengine.commands").generate_lsp()
+                require("unrealengine.commands").build()
             end,
             desc = "UnrealEngine: Build"
         },
