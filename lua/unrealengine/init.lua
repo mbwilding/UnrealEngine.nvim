@@ -1,6 +1,5 @@
 local helpers = require("unrealengine.helpers")
 
-
 local M = {}
 
 --- Default options

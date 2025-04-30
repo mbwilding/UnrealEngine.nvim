@@ -28,12 +28,10 @@ end
 --- Gets the platform specific build script path
 --- @param opts Opts Options table
 function M.get_build_script_path(opts)
-    local prefix = opts.engine_path .. "/Engine/Build/BatchFiles/"
-
     if jit.os == "Windows" then
-        return prefix .. "Build.bat"
+        return opts.engine_path .. "\\Engine\\Build\\BatchFiles\\Build.bat"
     else
-        return prefix .. M.get_platform() .. "/Build.sh"
+        return opts.engine_path .. "/Engine/Build/BatchFiles/" .. M.get_platform() .. "/Build.sh"
     end
 end
 
@@ -49,7 +47,7 @@ function M.get_uproject_path_info()
     if #files > 0 then
         return {
             path = files[1],
-            name = vim.fn.fnamemodify(files[1], ":t:r")
+            name = vim.fn.fnamemodify(files[1], ":t:r"),
         }
     end
 
@@ -74,7 +72,6 @@ end
 --- @param opts Opts Options table
 function M.execute_build_script(args, opts)
     local buffer = vim.api.nvim_create_buf(false, true)
-    -- vim.api.nvim_buf_set_name(buffer, " " .. selected.display)
     vim.bo[buffer].syntax = nil
     vim.bo[buffer].modified = false
 
@@ -103,15 +100,18 @@ function M.execute_build_script(args, opts)
 
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info()
-    local cmd = '"' .. script .. '" ' .. args
-        .. '"'
+    local cmd = "\""
+        .. script
+        .. "\" "
+        .. args
+        .. "\""
         .. uproject.path
-        .. '" -game -engine '
+        .. "\" -game -engine "
         .. uproject.name
         .. "Editor "
         .. opts.platform
         .. " Development"
-    vim.print(cmd)
+
     vim.fn.jobstart(cmd, job_opts)
 end
 
