@@ -2,5 +2,33 @@
 
 ## Dependencies
 
-Source copy of Unreal Engine
-clangd LSP (Can install via mason-lspconfig)
+- Source version of Unreal Engine
+- clangd (Language Server)
+
+## Install
+
+> lazy.nvim
+```lua
+return {
+    "mbwilding/UnrealEngine.nvim",
+    keys = {
+        {
+            "<leader>ug",
+            function()
+                require("unrealengine.commands").generate_lsp()
+            end,
+            desc = "UnrealEngine: Generate LSP"
+        },
+        {
+            "<leader>ub",
+            function()
+                require("unrealengine.commands").generate_lsp()
+            end,
+            desc = "UnrealEngine: Build"
+        },
+    },
+    opts = {
+        engine_path = "/path/to/UnrealEngine"
+    }
+}
+```
