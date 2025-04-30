@@ -36,22 +36,30 @@ function M.get_build_script_path(opts)
 end
 
 --- Retrieves information about the .uproject file in the current working directory
+--- @param uproject_path string|nil mbwilding/launcher.nvim current working directory override
 --- @return UprojectInfo
 --- @throws An error if no .uproject file is found in the current working directory
-function M.get_uproject_path_info()
-    local cwd = vim.loop.cwd()
-    local files = vim.fs.find(function(name)
-        return name:match("%.uproject$")
-    end, { path = cwd, max_depth = 1 })
-
-    if #files > 0 then
+function M.get_uproject_path_info(uproject_path)
+    if uproject_path then
         return {
-            path = files[1],
-            name = vim.fn.fnamemodify(files[1], ":t:r"),
+            path = uproject_path,
+            name = vim.fn.fnamemodify(uproject_path, ":t:r"),
         }
-    end
+    else
+        local cwd = vim.loop.cwd()
+        local files = vim.fs.find(function(name)
+            return name:match("%.uproject$")
+        end, { path = cwd, max_depth = 1 })
 
-    error("No .uproject file found in the current working directory (" .. cwd .. ")")
+        if #files > 0 then
+            return {
+                path = files[1],
+                name = vim.fn.fnamemodify(files[1], ":t:r"),
+            }
+        end
+
+        error("No .uproject file found in the current working directory (" .. cwd .. ")")
+    end
 end
 
 --- Copies a file from source to destination
@@ -99,7 +107,7 @@ function M.execute_build_script(args, opts)
     end
 
     local script = M.get_build_script_path(opts)
-    local uproject = M.get_uproject_path_info()
+    local uproject = M.get_uproject_path_info(opts.uproject_path)
 
     local script_wrapped = '"' .. script .. '" '
     local args_wrapped = args and args .. "" or ""

@@ -9,7 +9,11 @@ function M.generate_lsp(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
     helpers.execute_build_script("-mode=GenerateClangDatabase -project=", opts)
     local compile_commands_json = "/compile_commands.json"
-    helpers.copy_file(opts.engine_path .. compile_commands_json, vim.loop.cwd() .. compile_commands_json)
+
+    helpers.copy_file(
+        opts.engine_path .. compile_commands_json,
+        (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd()) .. compile_commands_json
+    )
 end
 
 --- Builds the project

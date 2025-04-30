@@ -11,6 +11,7 @@ local defaults = {
     platform = helpers.get_platform(),
     register_icon = true,
     close_on_success = true,
+    uproject_path = nil,
 }
 
 M.options = defaults

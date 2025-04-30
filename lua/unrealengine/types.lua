@@ -11,6 +11,7 @@
 ---@field platform string|nil The Unreal Engine platform - Will be set automatically if not specified
 ---@field register_icon boolean|nil Registers the Unreal Engine icon for .uproject files
 ---@field close_on_success boolean|nil Close the terminal split automatically when the command is successful
+---@field uproject_path string|nil Used when calling from external sources like mbwilding/launcher.nvim
 
 --- Information about the project
 --- @class UprojectInfo
