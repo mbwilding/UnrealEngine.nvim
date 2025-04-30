@@ -100,17 +100,21 @@ function M.execute_build_script(args, opts)
 
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info()
-    local cmd = "\""
-        .. script
-        .. "\" "
-        .. args or ""
-        .. "\""
-        .. uproject.path
-        .. "\" -game -engine "
+
+    local script_wrapped = '"' .. script .. '" '
+    local args_wrapped = args and args .. "" or ""
+    local uproject_path_wrapped = '"' .. uproject.path .. '"'
+
+    local cmd = script_wrapped
+        .. args_wrapped
+        .. uproject_path_wrapped
+        .. " -game -engine "
+        .. (opts.with_editor and "-Editor " or "")
         .. uproject.name
         .. "Editor "
         .. opts.platform
-        .. " Development"
+        .. " "
+        .. opts.build_type
 
     vim.fn.jobstart(cmd, job_opts)
 end

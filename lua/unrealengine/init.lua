@@ -6,6 +6,8 @@ local M = {}
 --- @type Opts
 local defaults = {
     engine_path = nil,
+    build_type = "Development",
+    with_editor = false,
     platform = helpers.get_platform(),
     register_icon = true,
     close_on_success = true,
