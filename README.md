@@ -5,8 +5,8 @@ Supports Linux, Mac, and Windows
 ## Dependencies
 
 - Source version of Unreal Engine
-- clangd (Language Server)
-- Windows: winget install -e --id LLVM.LLVM
+- clangd (LSP)
+- Windows - LLVM (clang-cl): `winget install -e --id LLVM.LLVM`
 
 ## Options
 
