@@ -1,5 +1,7 @@
 # UnrealEngine.nvim
 
+Supports Linux, Mac, and Windows
+
 ## Dependencies
 
 - Source version of Unreal Engine
