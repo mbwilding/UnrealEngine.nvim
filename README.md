@@ -4,6 +4,7 @@
 
 - Source version of Unreal Engine
 - clangd (Language Server)
+- Windows: winget install -e --id LLVM.LLVM
 
 ## Install
 
