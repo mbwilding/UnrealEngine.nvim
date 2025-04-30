@@ -37,11 +37,6 @@ function M.get_build_script_path(opts)
     end
 end
 
---- Information about the project
---- @class UprojectInfo
---- @field path string Full path to the .uproject file
---- @field name string The project name derived from the file name (without extension)
-
 --- Retrieves information about the .uproject file in the current working directory
 --- @return UprojectInfo
 --- @throws An error if no .uproject file is found in the current working directory
