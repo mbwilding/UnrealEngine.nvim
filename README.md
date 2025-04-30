@@ -8,11 +8,15 @@ Supports Linux, Mac, and Windows
 - clangd (Language Server)
 - Windows: winget install -e --id LLVM.LLVM
 
+## Options
+
+[Options](https://github.com/mbwilding/UnrealEngine.nvim/blob/main/lua/unrealengine/types.lua#L7)
+
+> The commands can also be passed the opts directly to allow for different configurations, these will merge with your defaults passed into setup
+
 ## Install
 
 ### lazy.nvim
-
-> The commands can also be passed the opts directly to allow for different configurations, these will merge with your defaults passed into setup
 
 ```lua
 return {
