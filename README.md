@@ -7,10 +7,17 @@
 
 ## Install
 
-> lazy.nvim
+### lazy.nvim
+
+> The commands can also be passed the opts directly to allow for different configurations, these will merge with your defaults passed into setup
+
 ```lua
 return {
     "mbwilding/UnrealEngine.nvim",
+    dependencies = {
+        -- optional, this registers the Unreal Engine icon to .uproject files
+        "nvim-tree/nvim-web-devicons",
+    },
     keys = {
         {
             "<leader>ug",
