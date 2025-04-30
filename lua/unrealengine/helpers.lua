@@ -53,7 +53,7 @@ function M.get_uproject_path_info()
 
     if #files > 0 then
         return {
-            path = cwd .. "/" .. files[1],
+            path = files[1],
             name = vim.fn.fnamemodify(files[1], ":t:r")
         }
     end
@@ -74,10 +74,11 @@ function M.copy_file(src, dst)
     output:close()
 end
 
---- Executes a command in a split buffer
---- @param cmd string The command to execute
+--- Executes a script in a split buffer
+--- @param script string The script to execute
+--- @param args string The script args
 --- @param opts Opts Options table
-function M.execute_command(cmd, opts)
+function M.execute_build_script(script, args, opts)
     local buffer = vim.api.nvim_create_buf(false, true)
     -- vim.api.nvim_buf_set_name(buffer, " " .. selected.display)
     vim.bo[buffer].syntax = nil
@@ -106,6 +107,7 @@ function M.execute_command(cmd, opts)
         end
     end
 
+    local cmd = '"' .. script .. '" ' .. args
     vim.fn.jobstart(cmd, job_opts)
 end
 

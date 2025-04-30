@@ -11,7 +11,7 @@ function M.generate_lsp(opts)
     local uproject = helpers.get_uproject_path_info()
 
     local script = helpers.get_build_script_path(opts)
-    local args = ' -mode=GenerateClangDatabase -project="'
+    local args = '-mode=GenerateClangDatabase -project="'
         .. uproject.path
         .. '" -game -engine '
         .. uproject.name
@@ -19,7 +19,7 @@ function M.generate_lsp(opts)
         .. opts.platform
         .. " Development"
 
-    helpers.execute_command(script .. args, opts)
+    helpers.execute_build_script(script, args, opts)
 
     local compile_commands_json = "/compile_commands.json"
     helpers.copy_file(opts.engine_path .. compile_commands_json, vim.loop.cwd() .. compile_commands_json)
@@ -33,7 +33,7 @@ function M.build(opts)
     local uproject = helpers.get_uproject_path_info()
 
     local script = helpers.get_build_script_path(opts)
-    local args = ' "'
+    local args = '"'
         .. uproject.path
         .. '" -game -engine '
         .. uproject.name
@@ -41,7 +41,7 @@ function M.build(opts)
         .. opts.platform
         .. " Development"
 
-    helpers.execute_command(script .. args, opts)
+    helpers.execute_build_script(script, args, opts)
 end
 
 return M
