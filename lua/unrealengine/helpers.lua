@@ -115,7 +115,7 @@ function M.execute_build_script(args, opts)
     local with_editor = (opts.with_editor and "-Editor " or "")
     local standard = '"' .. uproject.name .. 'Editor" ' .. opts.platform .. " " .. opts.build_type
 
-    local cwd
+    local cmd
     if jit.os == "Windows" then
         cmd = "cmd /c "
             .. script_wrapped
