@@ -1,5 +1,46 @@
 local M = {}
 
+--- @param engine_path string|table<string> Engine path
+function M.validate_engine_path(engine_path)
+    if engine_path == nil then
+        error("engine_path cannot be nil")
+    end
+
+    if type(engine_path) ~= "string" and type(engine_path) ~= "table" then
+        error("engine_path must be a string or table of strings: " .. vim.inspect(engine_path))
+    end
+
+    if type(engine_path) == "table" then
+        for _, path in ipairs(engine_path) do
+            if type(path) ~= "string" then
+                error("engine_path table must contain only strings: " .. vim.inspect(path))
+            end
+        end
+    end
+
+    if type(engine_path) == "string" then
+        local stat = vim.loop.fs_stat(engine_path)
+        if stat and stat.type == "directory" then
+            return engine_path
+        end
+    end
+
+    if type(engine_path) == "table" then
+        for _, path in ipairs(engine_path) do
+            if type(path) ~= "string" then
+                error("engine_path element is not a string: " .. tostring(path))
+            end
+
+            local stat = vim.loop.fs_stat(path)
+            if stat and stat.type == "directory" then
+                return path
+            end
+        end
+    end
+
+    error("engine_path is invalid: " .. vim.inspect(engine_path))
+end
+
 --- Registers the Unreal Engine icon for .uproject files
 M.register_icon = function()
     local ok, devicons = pcall(require, "nvim-web-devicons")

@@ -21,6 +21,7 @@ Supports Linux, Mac, and Windows
 ```lua
 return {
     "mbwilding/UnrealEngine.nvim",
+    lazy = false,
     dependencies = {
         -- optional, this registers the Unreal Engine icon to .uproject files
         "nvim-tree/nvim-web-devicons",
@@ -42,7 +43,8 @@ return {
         },
     },
     opts = {
-        engine_path = "/path/to/UnrealEngine"
+        auto_generate = false, -- Auto generates the LSP info when enabled
+        engine_path = "/path/to/UnrealEngine" -- Can also take a table<string>
     }
 }
 ```

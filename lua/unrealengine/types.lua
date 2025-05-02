@@ -5,13 +5,14 @@
 
 --- The options for UnrealEngine.nvim
 ---@class Opts
----@field engine_path string|nil The path to the source version of Unreal Engine
+---@field engine_path string|table<string>|nil The path/s to the source version of Unreal Engine
 ---@field build_type BuildType|nil The type of build
 ---@field with_editor boolean|nil If you are also building the editor
 ---@field platform string|nil The Unreal Engine platform - Will be set automatically if not specified
 ---@field register_icon boolean|nil Registers the Unreal Engine icon for .uproject files
 ---@field close_on_success boolean|nil Close the terminal split automatically when the command is successful
 ---@field uproject_path string|nil Used when calling from external sources like mbwilding/launcher.nvim
+---@field auto_generate boolean|nil Will generate the LSP info if .uproject is detected at top level of cwd
 
 --- Information about the project
 --- @class UprojectInfo

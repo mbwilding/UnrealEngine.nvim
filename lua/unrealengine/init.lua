@@ -12,6 +12,7 @@ local defaults = {
     register_icon = true,
     close_on_success = true,
     uproject_path = nil,
+    auto_generate = false,
 }
 
 M.options = defaults
@@ -19,19 +20,17 @@ M.options = defaults
 --- Setup
 --- @param opts Opts Options table
 function M.setup(opts)
+    local engine_path = helpers.validate_engine_path(opts.engine_path)
     opts = vim.tbl_deep_extend("force", defaults, opts or {})
+    opts.engine_path = engine_path
     M.options = opts
 
     if opts.register_icon then
         helpers.register_icon()
     end
 
-    if opts.engine_path == nil then
-        error("opts.engine_path cannot be nil")
-    end
-
-    if type(opts.engine_path) ~= "string" then
-        error("opts.engine_path must be a string")
+    if opts.auto_generate then
+        require("unrealengine.autocommands").auto_generate()
     end
 end
 
