@@ -150,25 +150,26 @@ function M.execute_build_script(args, opts)
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
 
-    local script_wrapped = '"' .. script .. '" '
-    local args_wrapped = args and args .. "" or ""
-    local uproject_path_wrapped = '"' .. uproject.path .. '"'
-    local with_editor = (opts.with_editor and "-Editor " or "")
-    local standard = '"' .. uproject.name .. 'Editor" ' .. opts.platform .. " " .. opts.build_type
+    local base = '"'
+        .. script
+        .. '" '
+        .. '"'
+        .. uproject.name
+        .. 'Editor" '
+        .. opts.platform
+        .. " "
+        .. opts.build_type
+        .. " "
+        .. (args or "")
+        .. '"'
+        .. uproject.path
+        .. '"'
+        .. " -game -engine "
+        .. (opts.with_editor and "-Editor " or "")
 
-    local cmd
-    if jit.os == "Windows" then
-        cmd = "cmd /c "
-            .. script_wrapped
-            .. standard
-            .. " "
-            .. args_wrapped
-            .. uproject_path_wrapped
-            .. " -game -engine "
-            .. with_editor
-    else
-        cmd = script_wrapped .. args_wrapped .. uproject_path_wrapped .. " -game -engine " .. with_editor .. standard
-    end
+    print(base)
+
+    local cmd = (jit.os == "Windows") and ("cmd /c " .. base) or base
 
     vim.fn.jobstart(cmd, job_opts)
 end

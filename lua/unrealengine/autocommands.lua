@@ -21,7 +21,7 @@ function M.auto_generate()
                 if type == "file" and name:match("%.uproject$") then
                     local uproject_path = cwd .. "/" .. name
                     require("unrealengine.commands").generate_lsp({
-                        uproject_path = uproject_path
+                        uproject_path = uproject_path,
                     })
                     break
                 end
