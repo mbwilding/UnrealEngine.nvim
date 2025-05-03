@@ -44,6 +44,7 @@ return {
     },
     opts = {
         auto_generate = false, -- Auto generates the LSP info when enabled
+        auto_build = false, -- Auto builds code on save when enabled
         engine_path = "/path/to/UnrealEngine" -- Can also take a table<string>
     }
 }

@@ -1,5 +1,27 @@
 local M = {}
 
+--- Validates and returns a valid engine path
+--- @param directory string Directory
+function M.find_uproject(directory)
+    local handle, _ = vim.loop.fs_scandir(directory)
+    if not handle then
+        return nil
+    end
+
+    while true do
+        local name, type = vim.loop.fs_scandir_next(handle)
+        if not name then
+            break
+        end
+        if type == "file" and name:match("%.uproject$") then
+            return directory .. "/" .. name
+        end
+    end
+
+    return nil
+end
+
+--- Validates and returns a valid engine path
 --- @param engine_path string|table<string> Engine path
 function M.validate_engine_path(engine_path)
     if engine_path == nil then
@@ -136,7 +158,6 @@ function M.execute_build_script(args, opts)
     vim.cmd("botright split")
     local win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(win, buffer)
-    vim.cmd("startinsert")
 
     local job_opts = {
         term = true,

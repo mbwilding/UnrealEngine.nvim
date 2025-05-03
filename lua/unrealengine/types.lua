@@ -13,6 +13,7 @@
 ---@field close_on_success boolean|nil Close the terminal split automatically when the command is successful
 ---@field uproject_path string|nil Used when calling from external sources like mbwilding/launcher.nvim
 ---@field auto_generate boolean|nil Will generate the LSP info if .uproject is detected at top level of cwd
+---@field auto_build boolean|nil Will build your C++ code on save
 
 --- Information about the project
 --- @class UprojectInfo

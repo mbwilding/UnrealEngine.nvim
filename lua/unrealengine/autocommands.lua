@@ -1,6 +1,9 @@
+local helpers = require("unrealengine.helpers")
+
 local M = {}
 
-function M.auto_generate()
+--- Auto generates lsp info when uproject detected in CWD
+function M.auto_generate_lsp()
     vim.api.nvim_create_autocmd({ "VimEnter", "DirChanged" }, {
         callback = function()
             local cwd = vim.loop.cwd() or vim.fn.getcwd()
@@ -8,23 +11,23 @@ function M.auto_generate()
                 return
             end
 
-            local handle, _ = vim.loop.fs_scandir(cwd)
-            if not handle then
-                return
+            local uproject_path = helpers.find_uproject(cwd)
+            if uproject_path then
+                require("unrealengine.commands").generate_lsp({ uproject_path = uproject_path })
             end
+        end,
+    })
+end
 
-            while true do
-                local name, type = vim.loop.fs_scandir_next(handle)
-                if not name then
-                    break
-                end
-                if type == "file" and name:match("%.uproject$") then
-                    local uproject_path = cwd .. "/" .. name
-                    require("unrealengine.commands").generate_lsp({
-                        uproject_path = uproject_path,
-                    })
-                    break
-                end
+--- Auto builds C++ code on save
+function M.auto_build()
+    vim.api.nvim_create_autocmd("BufWritePost", {
+        pattern = { "*.cpp", "*.h", "*.hpp", "*.cs" },
+        callback = function()
+            local cwd = vim.loop.cwd() or vim.fn.getcwd()
+            local uproject_path = helpers.find_uproject(cwd)
+            if uproject_path then
+                require("unrealengine.commands").build({ uproject_path = uproject_path })
             end
         end,
     })

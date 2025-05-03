@@ -13,6 +13,7 @@ local defaults = {
     close_on_success = true,
     uproject_path = nil,
     auto_generate = false,
+    auto_build = false,
 }
 
 M.options = defaults
@@ -30,7 +31,11 @@ function M.setup(opts)
     end
 
     if opts.auto_generate then
-        require("unrealengine.autocommands").auto_generate()
+        require("unrealengine.autocommands").auto_generate_lsp()
+    end
+
+    if opts.auto_build then
+        require("unrealengine.autocommands").auto_build()
     end
 end
 
