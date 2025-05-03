@@ -116,11 +116,15 @@ function M.copy_file(src, dst)
     output:close()
 end
 
+--- Concatenates the args with spaces
+--- @param args table<string> The arguments to concatenate with spaces
 function M.format_args(args)
     assert(type(args) == "table", "format_args expects a table")
     return table.concat(args, " ")
 end
 
+--- Wraps the string in "
+--- @param value string The value to wrap in "
 function M.wrap(value)
     if value == nil or value == "" then
         return ""
