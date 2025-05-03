@@ -1,12 +1,14 @@
-local find_uproject_cache = {}
-
 local M = {}
+
+M.find_uproject_cache = {}
+M.current_build_job = nil
+M.job_queue = {}
 
 --- Validates and returns a valid engine path
 --- @param directory string Directory
 function M.find_uproject(directory)
-    if find_uproject_cache[directory] then
-        return find_uproject_cache[directory]
+    if M.find_uproject_cache[directory] then
+        return M.find_uproject_cache[directory]
     end
 
     local handle, _ = vim.loop.fs_scandir(directory)
@@ -21,12 +23,12 @@ function M.find_uproject(directory)
         end
         if type == "file" and name:match("%.uproject$") then
             local path = directory .. "/" .. name
-            find_uproject_cache[directory] = path
+            M.find_uproject_cache[directory] = path
             return path
         end
     end
 
-    find_uproject_cache[directory] = nil
+    M.find_uproject_cache[directory] = nil
     return nil
 end
 
@@ -156,25 +158,33 @@ function M.wrap(value)
     return '"' .. value .. '"'
 end
 
---- Executes a script in a split buffer
+--- Executes the build script in a split buffer
 --- @param args string|nil The script args
 --- @param opts Opts Options table
 function M.execute_build_script(args, opts)
+    if M.current_build_job then
+        table.insert(M.job_queue, { args = args, opts = opts })
+        return
+    end
+
+    local original_win = vim.api.nvim_get_current_win()
+
     local buffer = vim.api.nvim_create_buf(false, true)
     vim.bo[buffer].syntax = nil
     vim.bo[buffer].modified = false
 
+    -- Open the build split without permanently taking focus.
     vim.cmd("botright split")
-    local win = vim.api.nvim_get_current_win()
-    if vim.api.nvim_win_is_valid(win) then
-        vim.api.nvim_win_set_buf(win, buffer)
+    local build_win = vim.api.nvim_get_current_win()
+    if vim.api.nvim_win_is_valid(build_win) then
+        vim.api.nvim_win_set_buf(build_win, buffer)
     end
 
     vim.api.nvim_buf_attach(buffer, false, {
         on_lines = function(_, _, _, _, _)
             local total_lines = vim.api.nvim_buf_line_count(buffer)
-            if vim.api.nvim_win_is_valid(win) then
-                vim.api.nvim_win_set_cursor(win, { total_lines, 0 })
+            if vim.api.nvim_win_is_valid(build_win) then
+                vim.api.nvim_win_set_cursor(build_win, { total_lines, 0 })
             end
         end,
     })
@@ -197,6 +207,20 @@ function M.execute_build_script(args, opts)
         end
     end
 
+    local user_on_exit = job_opts.on_exit
+    job_opts.on_exit = function(job_id, exit_code, event)
+        if user_on_exit then
+            user_on_exit(job_id, exit_code, event)
+        end
+        M.current_build_job = nil
+        if #M.job_queue > 0 then
+            local next_job = table.remove(M.job_queue, 1)
+            vim.schedule(function()
+                M.execute_build_script(next_job.args, next_job.opts)
+            end)
+        end
+    end
+
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
     local formatted_cmd = table.concat({
@@ -210,7 +234,14 @@ function M.execute_build_script(args, opts)
     }, " ")
 
     local cmd = (jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd
-    vim.fn.jobstart(cmd, job_opts)
+    local job_id = vim.fn.jobstart(cmd, job_opts)
+    M.current_build_job = job_id
+
+    vim.schedule(function()
+        if vim.api.nvim_win_is_valid(original_win) then
+            vim.api.nvim_set_current_win(original_win)
+        end
+    end)
 end
 
 return M
