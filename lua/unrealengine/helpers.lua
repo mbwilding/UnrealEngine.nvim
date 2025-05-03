@@ -116,6 +116,18 @@ function M.copy_file(src, dst)
     output:close()
 end
 
+function M.format_args(args)
+    assert(type(args) == "table", "format_args expects a table")
+    return table.concat(args, " ")
+end
+
+function M.wrap(value)
+    if value == nil or value == "" then
+        return ""
+    end
+    return '"' .. value .. '"'
+end
+
 --- Executes a script in a split buffer
 --- @param args string|nil The script args
 --- @param opts Opts Options table
@@ -149,26 +161,17 @@ function M.execute_build_script(args, opts)
 
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
-
-    local base = '"'
-        .. script
-        .. '" '
-        .. '"'
-        .. uproject.name
-        .. 'Editor" '
-        .. opts.platform
-        .. " "
-        .. opts.build_type
-        .. " "
-        .. (args or "")
-        .. '"'
-        .. uproject.path
-        .. '"'
-        .. " -game -engine "
-        .. (opts.with_editor and "-Editor " or "")
+    local base = M.format_args({
+        M.wrap(script),
+        M.wrap(uproject.name .. "Editor"),
+        opts.platform,
+        opts.build_type,
+        (args or "") .. M.wrap(uproject.path),
+        "-game -engine",
+        (opts.with_editor and "-Editor " or ""),
+    })
 
     local cmd = (jit.os == "Windows") and ("cmd /c " .. base) or base
-
     vim.fn.jobstart(cmd, job_opts)
 end
 
