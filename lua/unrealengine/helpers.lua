@@ -166,7 +166,18 @@ function M.execute_build_script(args, opts)
 
     vim.cmd("botright split")
     local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(win, buffer)
+    if vim.api.nvim_win_is_valid(win) then
+        vim.api.nvim_win_set_buf(win, buffer)
+    end
+
+    vim.api.nvim_buf_attach(buffer, false, {
+        on_lines = function(_, _, _, _, _)
+            local total_lines = vim.api.nvim_buf_line_count(buffer)
+            if vim.api.nvim_win_is_valid(win) then
+                vim.api.nvim_win_set_cursor(win, { total_lines, 0 })
+            end
+        end,
+    })
 
     local job_opts = {
         term = true,
