@@ -71,7 +71,8 @@ function M.validate_engine_path(engine_path)
         end
     end
 
-    error("engine_path is invalid: " .. vim.inspect(engine_path))
+    -- error("engine_path is invalid: " .. vim.inspect(engine_path))
+    return nil
 end
 
 --- Registers the Unreal Engine icon for .uproject files
