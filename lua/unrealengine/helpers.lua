@@ -1,8 +1,15 @@
 local M = {}
 
+--- find_uproject cache
+local cache = {}
+
 --- Validates and returns a valid engine path
 --- @param directory string Directory
 function M.find_uproject(directory)
+    if cache[directory] then
+        return cache[directory]
+    end
+
     local handle, _ = vim.loop.fs_scandir(directory)
     if not handle then
         return nil
@@ -14,10 +21,13 @@ function M.find_uproject(directory)
             break
         end
         if type == "file" and name:match("%.uproject$") then
-            return directory .. "/" .. name
+            local path = directory .. "/" .. name
+            cache[directory] = path
+            return path
         end
     end
 
+    cache[directory] = nil
     return nil
 end
 
