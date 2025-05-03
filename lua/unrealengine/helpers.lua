@@ -116,13 +116,6 @@ function M.copy_file(src, dst)
     output:close()
 end
 
---- Concatenates the args with spaces
---- @param args table<string> The arguments to concatenate with spaces
-function M.format_args(args)
-    assert(type(args) == "table", "format_args expects a table")
-    return table.concat(args, " ")
-end
-
 --- Wraps the string in "
 --- @param value string The value to wrap in "
 function M.wrap(value)
@@ -165,7 +158,7 @@ function M.execute_build_script(args, opts)
 
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
-    local base = M.format_args({
+    local formatted_cmd = table.concat({
         M.wrap(script),
         M.wrap(uproject.name .. "Editor"),
         opts.platform,
@@ -173,9 +166,9 @@ function M.execute_build_script(args, opts)
         (args or "") .. M.wrap(uproject.path),
         "-game -engine",
         (opts.with_editor and "-Editor " or ""),
-    })
+    }, " ")
 
-    local cmd = (jit.os == "Windows") and ("cmd /c " .. base) or base
+    local cmd = (jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd
     vim.fn.jobstart(cmd, job_opts)
 end
 
