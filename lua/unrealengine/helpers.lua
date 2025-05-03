@@ -167,8 +167,6 @@ function M.execute_build_script(args, opts)
         .. " -game -engine "
         .. (opts.with_editor and "-Editor " or "")
 
-    print(base)
-
     local cmd = (jit.os == "Windows") and ("cmd /c " .. base) or base
 
     vim.fn.jobstart(cmd, job_opts)
