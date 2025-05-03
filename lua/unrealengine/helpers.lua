@@ -1,14 +1,14 @@
 local M = {}
 
-M.find_uproject_cache = {}
-M.current_build_job = nil
-M.job_queue = {}
+local find_uproject_cache = {}
+local current_build_job = nil
+local job_queue = {}
 
 --- Validates and returns a valid engine path
 --- @param directory string Directory
 function M.find_uproject(directory)
-    if M.find_uproject_cache[directory] then
-        return M.find_uproject_cache[directory]
+    if find_uproject_cache[directory] then
+        return find_uproject_cache[directory]
     end
 
     local handle, _ = vim.loop.fs_scandir(directory)
@@ -23,12 +23,12 @@ function M.find_uproject(directory)
         end
         if type == "file" and name:match("%.uproject$") then
             local path = directory .. "/" .. name
-            M.find_uproject_cache[directory] = path
+            find_uproject_cache[directory] = path
             return path
         end
     end
 
-    M.find_uproject_cache[directory] = nil
+    find_uproject_cache[directory] = nil
     return nil
 end
 
@@ -162,8 +162,8 @@ end
 --- @param args string|nil The script args
 --- @param opts Opts Options table
 function M.execute_build_script(args, opts)
-    if M.current_build_job then
-        table.insert(M.job_queue, { args = args, opts = opts })
+    if current_build_job then
+        table.insert(job_queue, { args = args, opts = opts })
         return
     end
 
@@ -212,9 +212,9 @@ function M.execute_build_script(args, opts)
         if user_on_exit then
             user_on_exit(job_id, exit_code, event)
         end
-        M.current_build_job = nil
-        if #M.job_queue > 0 then
-            local next_job = table.remove(M.job_queue, 1)
+        current_build_job = nil
+        if #job_queue > 0 then
+            local next_job = table.remove(job_queue, 1)
             vim.schedule(function()
                 M.execute_build_script(next_job.args, next_job.opts)
             end)
@@ -235,7 +235,7 @@ function M.execute_build_script(args, opts)
 
     local cmd = (jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd
     local job_id = vim.fn.jobstart(cmd, job_opts)
-    M.current_build_job = job_id
+    current_build_job = job_id
 
     vim.schedule(function()
         if vim.api.nvim_win_is_valid(original_win) then
