@@ -41,6 +41,13 @@ return {
             end,
             desc = "UnrealEngine: Build"
         },
+        {
+            "<leader>uc",
+            function()
+                require("unrealengine.commands").clean()
+            end,
+            desc = "UnrealEngine: Clean",
+        },
     },
     opts = {
         auto_generate = true, -- Auto generates the LSP info, defaults to false

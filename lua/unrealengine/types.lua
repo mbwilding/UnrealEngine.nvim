@@ -19,3 +19,4 @@
 --- @class UprojectInfo
 --- @field path string Full path to the .uproject file
 --- @field name string The project name derived from the file name (without extension)
+--- @field cwd string The projects current working directory

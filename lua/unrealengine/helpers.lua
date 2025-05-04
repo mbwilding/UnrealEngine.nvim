@@ -130,6 +130,7 @@ function M.get_uproject_path_info(uproject_path)
             return {
                 path = files[1],
                 name = vim.fn.fnamemodify(files[1], ":t:r"),
+                cwd = cwd,
             }
         end
 
