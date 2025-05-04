@@ -42,6 +42,20 @@ return {
             desc = "UnrealEngine: Build"
         },
         {
+            "<leader>ur",
+            function()
+                require("unrealengine.commands").rebuild()
+            end,
+            desc = "UnrealEngine: Rebuild"
+        },
+        {
+            "<leader>uo",
+            function()
+                require("unrealengine.commands").run()
+            end,
+            desc = "UnrealEngine: Open"
+        },
+        {
             "<leader>uc",
             function()
                 require("unrealengine.commands").clean()

@@ -115,6 +115,16 @@ function M.get_build_script_path(opts)
     end
 end
 
+--- Gets the platform specific engine binary
+--- @param opts Opts Options table
+function M.get_engine_binary_path(opts)
+    if jit.os == "Windows" then
+        return opts.engine_path .. "\\Engine\\Binaries\\" .. M.get_platform() .. "\\UnrealEditor.exe"
+    else
+        return opts.engine_path .. "/Engine/Binaries/" .. M.get_platform() .. "/UnrealEditor"
+    end
+end
+
 --- Retrieves information about the .uproject file in the current working directory
 --- @param uproject_path string|nil mbwilding/launcher.nvim current working directory override
 --- @return UprojectInfo
@@ -166,15 +176,10 @@ function M.wrap(value)
     return '"' .. value .. '"'
 end
 
---- Executes the build script in a split buffer
---- @param args string|nil The script args
+--- Executes the given command in a split buffer
+--- @param cmd string The command to run
 --- @param opts Opts Options table
-function M.execute_build_script(args, opts)
-    if current_build_job then
-        table.insert(job_queue, { args = args, opts = opts })
-        return
-    end
-
+function M.execute_command(cmd, opts)
     local original_win = vim.api.nvim_get_current_win()
 
     local buffer = vim.api.nvim_create_buf(false, true)
@@ -189,9 +194,9 @@ function M.execute_build_script(args, opts)
     end
 
     vim.api.nvim_buf_attach(buffer, false, {
-        on_lines = function(_, _, _, _, _)
-            local total_lines = vim.api.nvim_buf_line_count(buffer)
+        on_lines = function()
             if vim.api.nvim_win_is_valid(build_win) then
+                local total_lines = vim.api.nvim_buf_line_count(buffer)
                 vim.api.nvim_win_set_cursor(build_win, { total_lines, 0 })
             end
         end,
@@ -229,6 +234,25 @@ function M.execute_build_script(args, opts)
         end
     end
 
+    current_build_job = vim.fn.jobstart(cmd, job_opts)
+
+    vim.schedule(function()
+        if vim.api.nvim_win_is_valid(original_win) then
+            vim.api.nvim_set_current_win(original_win)
+        end
+    end)
+end
+
+--- Executes the build script with provided args and options
+--- If a job is already running, queues the new job
+--- @param args string|nil The script args
+--- @param opts Opts Options table.
+function M.execute_build_script(args, opts)
+    if current_build_job then
+        table.insert(job_queue, { args = args, opts = opts })
+        return
+    end
+
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
     local formatted_cmd = table.concat({
@@ -242,14 +266,17 @@ function M.execute_build_script(args, opts)
     }, " ")
 
     local cmd = (jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd
-    local job_id = vim.fn.jobstart(cmd, job_opts)
-    current_build_job = job_id
+    M.execute_command(cmd, opts)
+end
 
-    vim.schedule(function()
-        if vim.api.nvim_win_is_valid(original_win) then
-            vim.api.nvim_set_current_win(original_win)
-        end
-    end)
+function M.execute_engine(opts)
+    local engine_binary_path = M.get_engine_binary_path(opts)
+    local uproject = M.get_uproject_path_info(opts.uproject_path)
+    local cmd = table.concat({
+        M.wrap(engine_binary_path),
+        M.wrap(uproject.path),
+    }, " ")
+    vim.fn.jobstart(cmd, { detach = true })
 end
 
 return M
