@@ -51,7 +51,7 @@ return {
         {
             "<leader>uo",
             function()
-                require("unrealengine.commands").run()
+                require("unrealengine.commands").open()
             end,
             desc = "UnrealEngine: Open"
         },
