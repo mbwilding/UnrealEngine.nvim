@@ -37,7 +37,7 @@ function M.clean(opts)
         ".cache",
         "DerivedDataCache",
         uproject.name .. ".code-workspace",
-        "compile_commands.json",
+        -- "compile_commands.json",
     }
 
     for _, path in ipairs(paths_to_remove) do
