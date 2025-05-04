@@ -24,6 +24,13 @@ function M.build(opts)
     helpers.execute_build_script(nil, opts)
 end
 
+--- Rebuilds the project (clean and build)
+--- @param opts Opts|nil Options table
+function M.rebuild(opts)
+    M.clean(opts)
+    M.build(opts)
+end
+
 --- Cleans the project by deleting build and config directories
 --- @param opts Opts|nil Options table
 function M.clean(opts)

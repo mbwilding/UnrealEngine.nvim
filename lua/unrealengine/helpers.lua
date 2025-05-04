@@ -79,6 +79,11 @@ end
 M.register_icon = function()
     local ok, devicons = pcall(require, "nvim-web-devicons")
     if ok then
+        local icons = (devicons.get_icons and devicons.get_icons()) or devicons.icons or {}
+        if icons["uproject"] then
+            return
+        end
+
         devicons.set_icon({
             uproject = {
                 name = "UnrealEngine",
@@ -115,13 +120,14 @@ end
 --- @return UprojectInfo
 --- @throws An error if no .uproject file is found in the current working directory
 function M.get_uproject_path_info(uproject_path)
+    local cwd = vim.loop.cwd() or vim.fn.getcwd()
     if uproject_path then
         return {
             path = uproject_path,
             name = vim.fn.fnamemodify(uproject_path, ":t:r"),
+            cwd = cwd,
         }
     else
-        local cwd = vim.loop.cwd()
         local files = vim.fs.find(function(name)
             return name:match("%.uproject$")
         end, { path = cwd, max_depth = 1 })
