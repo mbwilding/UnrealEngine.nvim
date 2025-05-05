@@ -9,14 +9,14 @@ function M.generate_lsp(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
     helpers.execute_build_script("-mode=GenerateClangDatabase -project=", opts)
     local cc_file = "compile_commands.json"
-    cc_file = helpers.platform_slash .. cc_file
+    cc_file = helpers.slash .. cc_file
 
     local source = opts.engine_path .. cc_file
     local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
 
     helpers.copy_file(source, uproject_dir .. cc_file)
 
-    local plugin_dir = uproject_dir .. helpers.platform_slash .. "Plugins"
+    local plugin_dir = uproject_dir .. helpers.slash .. "Plugins"
     local uplugin_files = vim.fs.find(function(name)
         return name:match(".*%.uplugin$")
     end, { path = plugin_dir, type = "file", limit = math.huge })
@@ -63,20 +63,22 @@ function M.clean(opts)
         ".cache",
         "DerivedDataCache",
         uproject.name .. ".code-workspace",
+        "compile_commands.json",
     }
 
     local plugin_dirs_to_remove = {
         "Binaries",
         "Intermediate",
         ".cache",
+        "compile_commands.json",
     }
 
     for _, path in ipairs(root_paths_to_remove) do
-        local target = uproject.cwd .. "/" .. path
+        local target = uproject.cwd .. helpers.slash .. path
         vim.fn.delete(target, "rf")
     end
 
-    local plugins_dir = uproject.cwd .. "/Plugins"
+    local plugins_dir = uproject.cwd .. helpers.slash .. "Plugins"
     if vim.fn.isdirectory(plugins_dir) == 1 then
         local scandir = vim.loop.fs_scandir(plugins_dir)
         if scandir then
@@ -86,9 +88,9 @@ function M.clean(opts)
                     break
                 end
                 if type == "directory" then
-                    local plugin_path = plugins_dir .. "/" .. name
+                    local plugin_path = plugins_dir .. helpers.slash .. name
                     for _, dir in ipairs(plugin_dirs_to_remove) do
-                        local target = plugin_path .. "/" .. dir
+                        local target = plugin_path .. helpers.slash .. dir
                         vim.fn.delete(target, "rf")
                     end
                 end

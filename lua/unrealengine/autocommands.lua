@@ -7,7 +7,7 @@ function M.auto_generate_lsp()
     vim.api.nvim_create_autocmd({ "VimEnter", "DirChanged" }, {
         callback = function()
             local cwd = vim.loop.cwd() or vim.fn.getcwd()
-            if vim.loop.fs_stat(cwd .. helpers.platform_slash .. "compile_commands.json") then
+            if vim.loop.fs_stat(cwd .. helpers.slash .. "compile_commands.json") then
                 return
             end
 
