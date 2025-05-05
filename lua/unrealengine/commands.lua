@@ -43,7 +43,8 @@ end
 function M.clean(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
     local uproject = helpers.get_uproject_path_info(opts.uproject_path)
-    local paths_to_remove = {
+
+    local root_paths_to_remove = {
         "Binaries",
         "Intermediate",
         "Saved",
@@ -54,9 +55,36 @@ function M.clean(opts)
         -- "compile_commands.json",
     }
 
-    for _, path in ipairs(paths_to_remove) do
+    local plugin_dirs_to_remove = {
+        "Binaries",
+        "Intermediate",
+    }
+
+    for _, path in ipairs(root_paths_to_remove) do
         local target = uproject.cwd .. "/" .. path
         vim.fn.delete(target, "rf")
+    end
+
+    local plugins_dir = uproject.cwd .. "/Plugins"
+    if vim.fn.isdirectory(plugins_dir) == 1 then
+        local scandir = vim.loop.fs_scandir(plugins_dir)
+        if scandir then
+            while true do
+                local name, type = vim.loop.fs_scandir_next(scandir)
+                if not name then
+                    break
+                end
+                if type == "directory" then
+                    local plugin_path = plugins_dir .. "/" .. name
+                    for _, dir in ipairs(plugin_dirs_to_remove) do
+                        local target = plugin_path .. "/" .. dir
+                        vim.fn.delete(target, "rf")
+                    end
+                end
+            end
+        else
+            vim.notify("Could not scan Plugins directory", vim.log.levels.ERROR)
+        end
     end
 end
 
