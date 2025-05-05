@@ -1,5 +1,8 @@
 local M = {}
 
+--- Platform slash
+M.platform_slash = jit.os == "Windows" and "\\" or "/"
+
 local find_uproject_cache = {}
 local current_build_job = nil
 local job_queue = {}

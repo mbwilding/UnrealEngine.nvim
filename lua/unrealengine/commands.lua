@@ -9,12 +9,23 @@ function M.generate_lsp(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
     helpers.execute_build_script("-mode=GenerateClangDatabase -project=", opts)
     local cc_file = "compile_commands.json"
-    cc_file = jit.os == "Windows" and "\\" .. cc_file or "/" .. cc_file
+    cc_file = helpers.platform_slash .. cc_file
 
-    helpers.copy_file(
-        opts.engine_path .. cc_file,
-        (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd()) .. cc_file
-    )
+    local source = opts.engine_path .. cc_file
+    local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
+
+    helpers.copy_file(source, uproject_dir .. cc_file)
+
+    local plugin_dir = uproject_dir .. helpers.platform_slash .. "Plugins"
+    local uplugin_files = vim.fs.find(function(name)
+        return name:match(".*%.uplugin$")
+    end, { path = plugin_dir, type = "file", limit = math.huge })
+    for _, uplugin_file in ipairs(uplugin_files) do
+        local uplugin_dir = vim.fn.fnamemodify(uplugin_file, ":h")
+        local current_plugin_dir = uplugin_dir .. cc_file
+
+        helpers.copy_file(source, current_plugin_dir)
+    end
 end
 
 --- Builds the project
@@ -52,12 +63,12 @@ function M.clean(opts)
         ".cache",
         "DerivedDataCache",
         uproject.name .. ".code-workspace",
-        -- "compile_commands.json",
     }
 
     local plugin_dirs_to_remove = {
         "Binaries",
         "Intermediate",
+        ".cache",
     }
 
     for _, path in ipairs(root_paths_to_remove) do
