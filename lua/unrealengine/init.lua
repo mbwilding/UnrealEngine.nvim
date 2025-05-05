@@ -3,7 +3,7 @@ local helpers = require("unrealengine.helpers")
 local M = {}
 
 --- Default options
---- @type Opts
+--- @type UnrealEngine.Opts
 local defaults = {
     engine_path = nil,
     build_type = "Development",
@@ -19,7 +19,7 @@ local defaults = {
 M.options = defaults
 
 --- Setup
---- @param opts Opts Options table
+--- @param opts UnrealEngine.Opts Options table
 function M.setup(opts)
     local engine_path = helpers.validate_engine_path(opts.engine_path)
     opts = vim.tbl_deep_extend("force", defaults, opts or {})

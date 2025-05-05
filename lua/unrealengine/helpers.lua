@@ -106,7 +106,7 @@ function M.get_platform()
 end
 
 --- Gets the platform specific build script path
---- @param opts Opts Options table
+--- @param opts UnrealEngine.Opts Options table
 function M.get_build_script_path(opts)
     if jit.os == "Windows" then
         return opts.engine_path .. "\\Engine\\Build\\BatchFiles\\Build.bat"
@@ -116,7 +116,7 @@ function M.get_build_script_path(opts)
 end
 
 --- Gets the platform specific engine binary
---- @param opts Opts Options table
+--- @param opts UnrealEngine.Opts Options table
 function M.get_engine_binary_path(opts)
     if jit.os == "Windows" then
         return opts.engine_path .. "\\Engine\\Binaries\\" .. M.get_platform() .. "\\UnrealEditor.exe"
@@ -127,7 +127,7 @@ end
 
 --- Retrieves information about the .uproject file in the current working directory
 --- @param uproject_path string|nil mbwilding/launcher.nvim current working directory override
---- @return UprojectInfo
+--- @return UnrealEngine.UprojectInfo
 --- @throws An error if no .uproject file is found in the current working directory
 function M.get_uproject_path_info(uproject_path)
     local cwd = vim.loop.cwd() or vim.fn.getcwd()
@@ -178,7 +178,7 @@ end
 
 --- Executes the given command in a split buffer
 --- @param cmd string The command to run
---- @param opts Opts Options table
+--- @param opts UnrealEngine.Opts Options table
 function M.execute_command(cmd, opts)
     local original_win = vim.api.nvim_get_current_win()
 
@@ -246,7 +246,7 @@ end
 --- Executes the build script with provided args and options
 --- If a job is already running, queues the new job
 --- @param args string|nil The script args
---- @param opts Opts Options table.
+--- @param opts UnrealEngine.Opts Options table.
 function M.execute_build_script(args, opts)
     if current_build_job then
         table.insert(job_queue, { args = args, opts = opts })

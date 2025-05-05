@@ -4,7 +4,7 @@
 ---| "Shipping"
 
 --- The options for UnrealEngine.nvim
----@class Opts
+---@class UnrealEngine.Opts
 ---@field engine_path string|table<string>|nil The path/s to the source version of Unreal Engine
 ---@field build_type BuildType|nil The type of build
 ---@field with_editor boolean|nil If you are also building the editor
@@ -16,7 +16,7 @@
 ---@field auto_build boolean|nil Will build your C++ code on save
 
 --- Information about the project
---- @class UprojectInfo
+--- @class UnrealEngine.UprojectInfo
 --- @field path string Full path to the .uproject file
 --- @field name string The project name derived from the file name (without extension)
 --- @field cwd string The projects current working directory
