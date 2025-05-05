@@ -1,4 +1,4 @@
----@alias BuildType
+---@alias UnrealEngine.BuildType
 ---| "DebugGame"
 ---| "Development"
 ---| "Shipping"
@@ -6,7 +6,7 @@
 --- The options for UnrealEngine.nvim
 ---@class UnrealEngine.Opts
 ---@field engine_path string|table<string>|nil The path/s to the source version of Unreal Engine
----@field build_type BuildType|nil The type of build
+---@field build_type UnrealEngine.BuildType|nil The type of build
 ---@field with_editor boolean|nil If you are also building the editor
 ---@field platform string|nil The Unreal Engine platform - Will be set automatically if not specified
 ---@field register_icon boolean|nil Registers the Unreal Engine icon for .uproject files
