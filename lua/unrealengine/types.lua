@@ -11,12 +11,12 @@
 ---@field platform string|nil The Unreal Engine platform - Will be set automatically if not specified
 ---@field register_icon boolean|nil Registers the Unreal Engine icon for .uproject files
 ---@field close_on_success boolean|nil Close the terminal split automatically when the command is successful
----@field uproject_path string|nil Used when calling from external sources like mbwilding/launcher.nvim
+---@field uproject_path string|nil The .uproject path, can be provided externally
 ---@field auto_generate boolean|nil Will generate the LSP info if .uproject is detected at top level of cwd
 ---@field auto_build boolean|nil Will build your C++ code on save
 
 --- Information about the project
---- @class UnrealEngine.UprojectInfo
---- @field path string Full path to the .uproject file
---- @field name string The project name derived from the file name (without extension)
---- @field cwd string The projects current working directory
+---@class UnrealEngine.UprojectInfo
+---@field path string Full path to the .uproject file
+---@field name string The project name derived from the file name (without extension)
+---@field cwd string The projects current working directory

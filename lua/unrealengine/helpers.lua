@@ -8,7 +8,7 @@ local current_build_job = nil
 local job_queue = {}
 
 --- Validates and returns a valid engine path
---- @param directory string Directory
+---@param directory string Directory
 function M.find_uproject(directory)
     if find_uproject_cache[directory] then
         return find_uproject_cache[directory]
@@ -36,7 +36,7 @@ function M.find_uproject(directory)
 end
 
 --- Validates and returns a valid engine path
---- @param engine_path string|table<string> Engine path
+---@param engine_path string|table<string> Engine path
 function M.validate_engine_path(engine_path)
     if engine_path == nil then
         error("engine_path cannot be nil")
@@ -109,7 +109,7 @@ function M.get_platform()
 end
 
 --- Gets the platform specific build script path
---- @param opts UnrealEngine.Opts Options table
+---@param opts UnrealEngine.Opts Options table
 function M.get_build_script_path(opts)
     if jit.os == "Windows" then
         return opts.engine_path .. "\\Engine\\Build\\BatchFiles\\Build.bat"
@@ -119,7 +119,7 @@ function M.get_build_script_path(opts)
 end
 
 --- Gets the platform specific engine binary
---- @param opts UnrealEngine.Opts Options table
+---@param opts UnrealEngine.Opts Options table
 function M.get_engine_binary_path(opts)
     if jit.os == "Windows" then
         return opts.engine_path .. "\\Engine\\Binaries\\" .. M.get_platform() .. "\\UnrealEditor.exe"
@@ -129,9 +129,8 @@ function M.get_engine_binary_path(opts)
 end
 
 --- Retrieves information about the .uproject file in the current working directory
---- @param uproject_path string|nil mbwilding/launcher.nvim current working directory override
---- @return UnrealEngine.UprojectInfo
---- @throws An error if no .uproject file is found in the current working directory
+---@param uproject_path string|nil mbwilding/launcher.nvim current working directory override
+---@return UnrealEngine.UprojectInfo|nil
 function M.get_uproject_path_info(uproject_path)
     local cwd = vim.loop.cwd() or vim.fn.getcwd()
     if uproject_path then
@@ -153,14 +152,14 @@ function M.get_uproject_path_info(uproject_path)
             }
         end
 
-        error("No .uproject file found in the current working directory (" .. cwd .. ")")
+        return nil
     end
 end
 
 --- Creates a symbolic link from src to dst cross-platform
 --- If an item already exists at dst, it will be removed
---- @param src string Source path
---- @param dst string Destination path for the symlink
+---@param src string Source path
+---@param dst string Destination path for the symlink
 function M.symlink_file(src, dst)
     local uv = vim.loop
 
@@ -200,7 +199,7 @@ function M.symlink_file(src, dst)
 end
 
 --- Wraps the string in "
---- @param value string The value to wrap in "
+---@param value string The value to wrap in "
 function M.wrap(value)
     if value == nil or value == "" then
         return ""
@@ -209,9 +208,9 @@ function M.wrap(value)
 end
 
 --- Executes the given command in a split buffer
---- @param cmd string The command to run
---- @param opts UnrealEngine.Opts Options table
---- @param on_complete? fun(opts: UnrealEngine.Opts) on_complete
+---@param cmd string The command to run
+---@param opts UnrealEngine.Opts Options table
+---@param on_complete? fun(opts: UnrealEngine.Opts) on_complete
 function M.execute_command(cmd, opts, on_complete)
     local original_win = vim.api.nvim_get_current_win()
 
@@ -283,9 +282,9 @@ end
 
 --- Executes the build script with provided args and options
 --- If a job is already running, queues the new job
---- @param args string|nil The script args
---- @param opts UnrealEngine.Opts Options table.
---- @param on_complete? fun(opts: UnrealEngine.Opts) on_complete
+---@param args string|nil The script args
+---@param opts UnrealEngine.Opts Options table.
+---@param on_complete? fun(opts: UnrealEngine.Opts) on_complete
 function M.execute_build_script(args, opts, on_complete)
     if current_build_job then
         table.insert(job_queue, { args = args, opts = opts })
@@ -294,6 +293,10 @@ function M.execute_build_script(args, opts, on_complete)
 
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
+    if not uproject then
+        vim.notify("No uproject found", error)
+        return
+    end
 
     local cmd = {
         M.wrap(script),
@@ -315,20 +318,31 @@ function M.execute_build_script(args, opts, on_complete)
     M.execute_command((jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd, opts, on_complete)
 end
 
-function M.execute_engine(opts)
+--- Open Unreal Editor, if opts.uproject_path is set, it will launch with that project
+---@param opts UnrealEngine.Opts Options table
+function M.open_unreal_editor(opts)
     local engine_binary_path = M.get_engine_binary_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
-    local cmd = table.concat({
-        M.wrap(engine_binary_path),
-        M.wrap(uproject.path),
-    }, " ")
+    local cmd
+    if uproject then
+        cmd = table.concat({
+            M.wrap(engine_binary_path),
+            M.wrap(uproject.path),
+        }, " ")
+    else
+        cmd = M.wrap(engine_binary_path)
+    end
     vim.fn.jobstart(cmd, { detach = true })
 end
 
 --- Cleans the project by deleting generated files
---- @param opts UnrealEngine.Opts Options table
+---@param opts UnrealEngine.Opts Options table
 function M.clean(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
+    if not uproject then
+        vim.notify("No uproject found", error)
+        return
+    end
 
     local root_paths_to_remove = {
         "Binaries",
@@ -380,7 +394,7 @@ function M.clean(opts)
 end
 
 --- Link clangd compile_commands.json to project and nested plugins
---- @param opts UnrealEngine.Opts Options table
+---@param opts UnrealEngine.Opts Options table
 function M.link_clangd_cc(opts)
     local cc_file = "compile_commands.json"
     cc_file = M.slash .. cc_file

@@ -64,9 +64,9 @@ return {
         },
     },
     opts = {
-        auto_generate = true, -- Auto generates the LSP info, defaults to false
-        auto_build = true, -- Auto builds code on save, defaults to false
-        engine_path = "/path/to/UnrealEngine" -- Can also take a table<string>
+        auto_generate = true, -- Auto generates LSP info when detected in CWD | default: false
+        auto_build = true, -- Auto builds on save | default: false
+        engine_path = "/path/to/UnrealEngine" -- Path to your UnrealEngine source directory, you can also provide a table of strings
     }
 }
 ```
