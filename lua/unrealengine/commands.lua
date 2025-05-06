@@ -7,26 +7,7 @@ local M = {}
 --- @param opts UnrealEngine.Opts|nil Options table
 function M.generate_lsp(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
-    helpers.execute_build_script("-mode=GenerateClangDatabase -project=", opts, function()
-        local cc_file = "compile_commands.json"
-        cc_file = helpers.slash .. cc_file
-
-        local source = opts.engine_path .. cc_file
-        local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
-
-        helpers.symlink_file(source, uproject_dir .. cc_file)
-
-        local plugin_dir = uproject_dir .. helpers.slash .. "Plugins"
-        local uplugin_files = vim.fs.find(function(name)
-            return name:match(".*%.uplugin$")
-        end, { path = plugin_dir, type = "file", limit = math.huge })
-        for _, uplugin_file in ipairs(uplugin_files) do
-            local uplugin_dir = vim.fn.fnamemodify(uplugin_file, ":h")
-            local current_plugin_dir = uplugin_dir .. cc_file
-
-            helpers.symlink_file(source, current_plugin_dir)
-        end
-    end)
+    helpers.execute_build_script("-mode=GenerateClangDatabase -project=", opts, helpers.link_clangd_cc)
 end
 
 --- Builds the project
@@ -51,59 +32,11 @@ function M.rebuild(opts)
     M.build(opts)
 end
 
---- Cleans the project by deleting build and config directories
+--- Cleans the project by deleting generated files
 --- @param opts UnrealEngine.Opts|nil Options table
 function M.clean(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
-    local uproject = helpers.get_uproject_path_info(opts.uproject_path)
-
-    local root_paths_to_remove = {
-        "Binaries",
-        "Intermediate",
-        "Saved",
-        ".vscode",
-        ".cache",
-        "DerivedDataCache",
-        uproject.name .. ".code-workspace",
-        "compile_commands.json",
-    }
-
-    local plugin_paths_to_remove = {
-        "Binaries",
-        "Intermediate",
-        ".cache",
-        "compile_commands.json",
-    }
-
-    for _, path in ipairs(root_paths_to_remove) do
-        local target = uproject.cwd .. helpers.slash .. path
-        vim.fn.delete(target, "rf")
-    end
-
-    local plugins_dir = uproject.cwd .. helpers.slash .. "Plugins"
-    if vim.fn.isdirectory(plugins_dir) == 1 then
-        local scandir = vim.loop.fs_scandir(plugins_dir)
-        if scandir then
-            while true do
-                local name, type = vim.loop.fs_scandir_next(scandir)
-                if not name then
-                    break
-                end
-                local current_object_path = plugins_dir .. helpers.slash .. name
-                if type == "directory" then
-                    local plugin_path = current_object_path
-                    for _, dir in ipairs(plugin_paths_to_remove) do
-                        local target = plugin_path .. helpers.slash .. dir
-                        vim.fn.delete(target, "rf")
-                    end
-                else
-                    vim.fn.delete(current_object_path, "rf")
-                end
-            end
-        else
-            vim.notify("Could not scan Plugins directory", vim.log.levels.ERROR)
-        end
-    end
+    helpers.clean(opts)
 end
 
 return M

@@ -211,7 +211,7 @@ end
 --- Executes the given command in a split buffer
 --- @param cmd string The command to run
 --- @param opts UnrealEngine.Opts Options table
---- @param on_complete? fun() on_complete
+--- @param on_complete? fun(opts: UnrealEngine.Opts) on_complete
 function M.execute_command(cmd, opts, on_complete)
     local original_win = vim.api.nvim_get_current_win()
 
@@ -268,7 +268,7 @@ function M.execute_command(cmd, opts, on_complete)
         end
 
         if on_complete then
-            on_complete()
+            on_complete(opts)
         end
     end
 
@@ -285,7 +285,7 @@ end
 --- If a job is already running, queues the new job
 --- @param args string|nil The script args
 --- @param opts UnrealEngine.Opts Options table.
---- @param on_complete? fun() on_complete
+--- @param on_complete? fun(opts: UnrealEngine.Opts) on_complete
 function M.execute_build_script(args, opts, on_complete)
     if current_build_job then
         table.insert(job_queue, { args = args, opts = opts })
@@ -323,6 +323,83 @@ function M.execute_engine(opts)
         M.wrap(uproject.path),
     }, " ")
     vim.fn.jobstart(cmd, { detach = true })
+end
+
+--- Cleans the project by deleting generated files
+--- @param opts UnrealEngine.Opts Options table
+function M.clean(opts)
+    local uproject = M.get_uproject_path_info(opts.uproject_path)
+
+    local root_paths_to_remove = {
+        "Binaries",
+        "Intermediate",
+        "Saved",
+        ".vscode",
+        ".cache",
+        "DerivedDataCache",
+        uproject.name .. ".code-workspace",
+        "compile_commands.json",
+    }
+
+    local plugin_paths_to_remove = {
+        "Binaries",
+        "Intermediate",
+        ".cache",
+        "compile_commands.json",
+    }
+
+    for _, path in ipairs(root_paths_to_remove) do
+        local target = uproject.cwd .. M.slash .. path
+        vim.fn.delete(target, "rf")
+    end
+
+    local plugins_dir = uproject.cwd .. M.slash .. "Plugins"
+    if vim.fn.isdirectory(plugins_dir) == 1 then
+        local scandir = vim.loop.fs_scandir(plugins_dir)
+        if scandir then
+            while true do
+                local name, type = vim.loop.fs_scandir_next(scandir)
+                if not name then
+                    break
+                end
+                local current_object_path = plugins_dir .. M.slash .. name
+                if type == "directory" then
+                    local plugin_path = current_object_path
+                    for _, dir in ipairs(plugin_paths_to_remove) do
+                        local target = plugin_path .. M.slash .. dir
+                        vim.fn.delete(target, "rf")
+                    end
+                else
+                    vim.fn.delete(current_object_path, "rf")
+                end
+            end
+        else
+            vim.notify("Could not scan Plugins directory", vim.log.levels.ERROR)
+        end
+    end
+end
+
+--- Link clangd compile_commands.json to project and nested plugins
+--- @param opts UnrealEngine.Opts Options table
+function M.link_clangd_cc(opts)
+    local cc_file = "compile_commands.json"
+    cc_file = M.slash .. cc_file
+
+    local source = opts.engine_path .. cc_file
+    local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
+
+    M.symlink_file(source, uproject_dir .. cc_file)
+
+    local plugin_dir = uproject_dir .. M.slash .. "Plugins"
+    local uplugin_files = vim.fs.find(function(name)
+        return name:match(".*%.uplugin$")
+    end, { path = plugin_dir, type = "file", limit = math.huge })
+    for _, uplugin_file in ipairs(uplugin_files) do
+        local uplugin_dir = vim.fn.fnamemodify(uplugin_file, ":h")
+        local current_plugin_dir = uplugin_dir .. cc_file
+
+        M.symlink_file(source, current_plugin_dir)
+    end
 end
 
 return M
