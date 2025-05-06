@@ -323,6 +323,7 @@ end
 function M.open_unreal_editor(opts)
     local engine_binary_path = M.get_engine_binary_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
+    ---@type string
     local cmd
     if uproject then
         cmd = table.concat({
