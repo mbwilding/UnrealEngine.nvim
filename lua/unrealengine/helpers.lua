@@ -157,17 +157,46 @@ function M.get_uproject_path_info(uproject_path)
     end
 end
 
---- Copies a file from source to destination
+--- Creates a symbolic link from src to dst cross-platform
+--- If an item already exists at dst, it will be removed
 --- @param src string Source path
---- @param dst string Destination path
-function M.copy_file(src, dst)
-    local input = assert(io.open(src, "rb"))
-    local content = input:read("*all")
-    input:close()
+--- @param dst string Destination path for the symlink
+function M.symlink_file(src, dst)
+    local uv = vim.loop
 
-    local output = assert(io.open(dst, "wb"))
-    output:write(content)
-    output:close()
+    local src_stat = uv.fs_stat(src)
+    if not src_stat then
+        error("Source does not exist: " .. src)
+    end
+
+    local link_type = src_stat.type
+
+    local dst_stat = uv.fs_stat(dst)
+    if dst_stat then
+        local ok, err
+        if dst_stat.type == "directory" then
+            ok, err = uv.fs_rmdir(dst)
+            if not ok then
+                error("Failed to remove existing destination directory: " .. err)
+            end
+        else
+            ok, err = uv.fs_unlink(dst)
+            if not ok then
+                error("Failed to remove existing destination file: " .. err)
+            end
+        end
+    end
+
+    -- On Windows, directories require a symlink flag.
+    local symlink_flag = nil
+    if jit.os == "Windows" and link_type == "directory" then
+        symlink_flag = 1
+    end
+
+    local ok, err = uv.fs_symlink(src, dst, symlink_flag)
+    if not ok then
+        error("Failed to create symlink from " .. src .. " to " .. dst .. ": " .. err)
+    end
 end
 
 --- Wraps the string in "
@@ -182,7 +211,8 @@ end
 --- Executes the given command in a split buffer
 --- @param cmd string The command to run
 --- @param opts UnrealEngine.Opts Options table
-function M.execute_command(cmd, opts)
+--- @param on_complete? fun() on_complete
+function M.execute_command(cmd, opts, on_complete)
     local original_win = vim.api.nvim_get_current_win()
 
     local buffer = vim.api.nvim_create_buf(false, true)
@@ -228,12 +258,17 @@ function M.execute_command(cmd, opts)
         if user_on_exit then
             user_on_exit(job_id, exit_code, event)
         end
+
         current_build_job = nil
         if #job_queue > 0 then
             local next_job = table.remove(job_queue, 1)
             vim.schedule(function()
                 M.execute_build_script(next_job.args, next_job.opts)
             end)
+        end
+
+        if on_complete then
+            on_complete()
         end
     end
 
@@ -250,7 +285,8 @@ end
 --- If a job is already running, queues the new job
 --- @param args string|nil The script args
 --- @param opts UnrealEngine.Opts Options table.
-function M.execute_build_script(args, opts)
+--- @param on_complete? fun() on_complete
+function M.execute_build_script(args, opts, on_complete)
     if current_build_job then
         table.insert(job_queue, { args = args, opts = opts })
         return
@@ -258,7 +294,8 @@ function M.execute_build_script(args, opts)
 
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
-    local formatted_cmd = table.concat({
+
+    local cmd = {
         M.wrap(script),
         M.wrap(uproject.name .. "Editor"),
         opts.platform,
@@ -266,10 +303,16 @@ function M.execute_build_script(args, opts)
         (args or "") .. M.wrap(uproject.path),
         "-game -engine",
         (opts.with_editor and "-Editor " or ""),
-    }, " ")
+    }
 
-    local cmd = (jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd
-    M.execute_command(cmd, opts)
+    local cc_path = opts.engine_path .. M.slash .. "compile_commands.json"
+    if vim.loop.fs_stat(cc_path) then
+        table.insert(cmd, "-NoExecCodeGenActions")
+    end
+
+    local formatted_cmd = table.concat(cmd, " ")
+
+    M.execute_command((jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd, opts, on_complete)
 end
 
 function M.execute_engine(opts)
