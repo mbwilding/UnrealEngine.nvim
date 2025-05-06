@@ -34,6 +34,7 @@ end
 function M.build(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
     helpers.execute_build_script(nil, opts)
+    M.generate_lsp(opts)
 end
 
 --- Opens the project in UE
