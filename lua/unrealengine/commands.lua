@@ -65,12 +65,14 @@ function M.clean(opts)
         ".cache",
         "DerivedDataCache",
         uproject.name .. ".code-workspace",
+        "compile_commands.json",
     }
 
-    local plugin_dirs_to_remove = {
+    local plugin_paths_to_remove = {
         "Binaries",
         "Intermediate",
         ".cache",
+        "compile_commands.json",
     }
 
     for _, path in ipairs(root_paths_to_remove) do
@@ -87,12 +89,15 @@ function M.clean(opts)
                 if not name then
                     break
                 end
+                local current_object_path = plugins_dir .. helpers.slash .. name
                 if type == "directory" then
-                    local plugin_path = plugins_dir .. helpers.slash .. name
-                    for _, dir in ipairs(plugin_dirs_to_remove) do
+                    local plugin_path = current_object_path
+                    for _, dir in ipairs(plugin_paths_to_remove) do
                         local target = plugin_path .. helpers.slash .. dir
                         vim.fn.delete(target, "rf")
                     end
+                else
+                    vim.fn.delete(current_object_path, "rf")
                 end
             end
         else
