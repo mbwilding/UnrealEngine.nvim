@@ -15,6 +15,7 @@ local defaults = {
     uproject_path = nil,
     auto_generate = false,
     auto_build = false,
+    environment_variables = nil,
 }
 
 M.options = defaults

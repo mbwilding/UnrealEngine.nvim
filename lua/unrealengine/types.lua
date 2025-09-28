@@ -14,6 +14,7 @@
 ---@field uproject_path string|nil The .uproject path, can be provided externally
 ---@field auto_generate boolean|nil Will generate the LSP info if .uproject is detected at top level of cwd
 ---@field auto_build boolean|nil Will build your C++ code on save
+---@field environment_variables table<string,string>|nil This will pass the environment variables to the engine when launching
 
 --- Information about the project
 ---@class UnrealEngine.UprojectInfo

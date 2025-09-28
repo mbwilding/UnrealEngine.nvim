@@ -323,6 +323,7 @@ end
 function M.open_unreal_editor(opts)
     local engine_binary_path = M.get_engine_binary_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
+
     ---@type string
     local cmd
     if uproject then
@@ -333,6 +334,18 @@ function M.open_unreal_editor(opts)
     else
         cmd = M.wrap(engine_binary_path)
     end
+
+    local environment_variables = ""
+    if opts.environment_variables then
+        for k, v in pairs(opts.environment_variables) do
+            environment_variables = environment_variables .. k .. '="' .. v .. '" '
+        end
+    end
+
+    if environment_variables then
+        cmd = environment_variables .. cmd
+    end
+
     vim.fn.jobstart(cmd, { detach = true })
 end
 
