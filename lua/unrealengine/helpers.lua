@@ -336,7 +336,7 @@ function M.open_unreal_editor(opts)
     end
 
     local environment_variables = ""
-    if opts.environment_variables then
+    if opts.environment_variables and jit.os ~= "Windows" then
         for k, v in pairs(opts.environment_variables) do
             environment_variables = environment_variables .. k .. '="' .. v .. '" '
         end
