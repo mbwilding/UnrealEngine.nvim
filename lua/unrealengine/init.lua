@@ -10,6 +10,7 @@ local defaults = {
     with_editor = false,
     platform = helpers.get_platform(),
     register_icon = true,
+    register_filetypes = true,
     close_on_success = true,
     uproject_path = nil,
     auto_generate = false,
@@ -25,6 +26,14 @@ function M.setup(opts)
     opts = vim.tbl_deep_extend("force", defaults, opts or {})
     opts.engine_path = engine_path
     M.options = opts
+
+    if opts.register_filetypes then
+        vim.filetype.add({
+            extension = {
+                uproject = "json",
+            },
+        })
+    end
 
     if opts.register_icon then
         helpers.register_icon()
