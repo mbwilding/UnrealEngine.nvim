@@ -501,10 +501,14 @@ end
 
 --- Start the remote control server
 function M.remote_start()
-    if (vim.v.servername == nil or vim.v.servername == "") then
-        pcall(function()
-            vim.fn.serverstart(vim.fn.tempname())
-        end)
+    if vim.v.servername == nil or vim.v.servername == "" then
+        local server_addr
+        if vim.fn.has("win32") == 1 then
+            server_addr = "\\\\.\\pipe\\nvim-" .. vim.fn.getpid()
+        else
+            server_addr = vim.fn.tempname()
+        end
+        vim.fn.serverstart(server_addr)
     end
 end
 
