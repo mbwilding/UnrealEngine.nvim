@@ -32,6 +32,7 @@ function M.setup(opts)
         vim.filetype.add({
             extension = {
                 uproject = "json",
+                uplugin = "json",
             },
         })
     end
