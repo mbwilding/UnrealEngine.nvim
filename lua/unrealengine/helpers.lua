@@ -78,20 +78,23 @@ function M.validate_engine_path(engine_path)
     return nil
 end
 
---- Registers the Unreal Engine icon for .uproject files
+--- Registers the Unreal Engine icon for .uproject and .uplugin files
 M.register_icon = function()
     local ok, devicons = pcall(require, "nvim-web-devicons")
     if ok then
-        local icons = (devicons.get_icons and devicons.get_icons()) or devicons.icons or {}
-        if icons["uproject"] then
-            return
-        end
+        local icon = "󰦱 "
+        local dark = vim.o.background == "dark"
 
         devicons.set_icon({
             uproject = {
                 name = "UnrealEngine",
-                icon = "󰦱 ",
-                color = vim.o.background == "dark" and "#ffffff" or "#000000",
+                icon = icon,
+                color = dark and "#ffffff" or "#000000",
+            },
+            uplugin = {
+                name = "UnrealEnginePlugin",
+                icon = icon,
+                color = "#3399FF",
             },
         })
     end
