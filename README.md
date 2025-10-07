@@ -2,8 +2,6 @@
 
 Supports Linux, Mac, and Windows
 
-> I'm developing a plugin for Unreal Engine that integrates Neovim as the code editor. To ensure files open in the correct Neovim instance (maintaining an active LSP session), Unreal Engine 5 needs to be launched from within Neovim.
-
 ## Dependencies
 
 - Source version of Unreal Engine
@@ -80,3 +78,18 @@ return {
     }
 }
 ```
+
+## Unreal Engine Plugin
+
+> **NEW**
+
+If you run `require("unrealengine.commands").build_engine()` (or map it as shown above with `<leader>ue`), it will link the Unreal Engine plugin that connects Neovim to Unreal Engine and build it. This will be how you update the plugin after updating the Neovim plugin with your package manager. **Note:** You must launch the editor via the Neovim plugin to establish the link for that Neovim instance.
+
+To set the source control plugin to Neovim in Unreal Engine:
+
+1. **Open** Unreal Engine.
+2. Navigate to **Edit > Editor Preferences**.
+3. In the sidebar under **General**, click the **Source Code** section.
+4. Change **Source Code Editor** to `Neovim` from the dropdown menu.
+5. Do **not** click restart; simply close the editor.
+6. **Launch Unreal Engine from Neovim.**
