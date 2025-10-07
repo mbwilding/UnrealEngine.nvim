@@ -11,6 +11,13 @@ function M.auto_generate_lsp()
 
             -- Check if compile_commands.json exists
             if vim.loop.fs_stat(compile_commands_path) then
+                -- Check for .clangd file and symlink if it doesn't exist
+                local clangd_path = cwd .. helpers.slash .. ".clangd"
+                if not vim.loop.fs_stat(clangd_path) then
+                    -- Create .clangd file if it doesn't exist
+                    helpers.create_clangd_file(cwd)
+                end
+
                 -- Check for Plugins folder and symlink to plugin directories
                 local plugins_dir = cwd .. helpers.slash .. "Plugins"
                 if vim.loop.fs_stat(plugins_dir) then
@@ -27,10 +34,12 @@ function M.auto_generate_lsp()
                                     return file_name:match(".*%.uplugin$")
                                 end, { path = plugin_path, type = "file", max_depth = 1 })
 
-                                -- If .uplugin file found in plugin directory, symlink compile_commands.json
+                                -- If .uplugin file found in plugin directory, symlink compile_commands.json and .clangd
                                 if #uplugin_files > 0 then
-                                    local target_path = plugin_path .. helpers.slash .. "compile_commands.json"
-                                    helpers.symlink_file(compile_commands_path, target_path)
+                                    local target_cc_path = plugin_path .. helpers.slash .. "compile_commands.json"
+                                    local target_clangd_path = plugin_path .. helpers.slash .. ".clangd"
+                                    helpers.symlink_file(compile_commands_path, target_cc_path)
+                                    helpers.symlink_file(clangd_path, target_clangd_path)
                                 end
                             end
                         end
