@@ -70,6 +70,10 @@ return {
             desc = "UnrealEngine: Link Plugin - Build Engine",
         },
     },
+    -- Optional, this will update and build the Unreal Engine plugin on update
+    build = function()
+        require("unrealengine.commands").build_engine()
+    end,
     opts = {
         auto_generate = true, -- Auto generates LSP info when detected in CWD | default: false
         auto_build = true, -- Auto builds on save | default: false
@@ -83,7 +87,9 @@ return {
 
 > **NEW**
 
-If you run `require("unrealengine.commands").build_engine()` (or map it as shown above with `<leader>ue`), it will link the Unreal Engine plugin that connects Neovim to Unreal Engine and build it. This will be how you update the plugin after updating the Neovim plugin with your package manager. **Note:** You must launch the editor via the Neovim plugin to establish the link for that Neovim instance.
+If you run `require("unrealengine.commands").build_engine()` (or map it as shown above with `<leader>ue`), it will link the Unreal Engine plugin that connects Neovim to Unreal Engine and build it. This will be how you update the plugin after updating the Neovim plugin with your package manager (Can be automated as explained below). **Note:** You must launch the editor via the Neovim plugin to establish the link for that Neovim instance.
+
+> To automatically update the Unreal Engine plugin when you update in Lazy, add the build field in the config like above.
 
 To set the source control plugin to Neovim in Unreal Engine:
 
