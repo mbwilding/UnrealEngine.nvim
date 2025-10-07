@@ -381,6 +381,7 @@ function M.clean(opts)
         "DerivedDataCache",
         uproject.name .. ".code-workspace",
         "compile_commands.json",
+        ".clangd",
     }
 
     local plugin_paths_to_remove = {
@@ -388,12 +389,17 @@ function M.clean(opts)
         "Intermediate",
         ".cache",
         "compile_commands.json",
+        ".clangd",
     }
 
     for _, path in ipairs(root_paths_to_remove) do
         local target = uproject.cwd .. M.slash .. path
         vim.fn.delete(target, "rf")
     end
+
+    -- Clean .clangd file from engine directory
+    local engine_clangd = opts.engine_path .. M.slash .. ".clangd"
+    vim.fn.delete(engine_clangd, "rf")
 
     local plugins_dir = uproject.cwd .. M.slash .. "Plugins"
     if vim.fn.isdirectory(plugins_dir) == 1 then
@@ -421,6 +427,47 @@ function M.clean(opts)
     end
 end
 
+--- Creates a .clangd file with Unreal Engine includes
+---@param project_dir string Project directory path
+function M.create_clangd_file(project_dir)
+    local clangd_content = [[CompileFlags:
+Add: [-include, CoreMinimal.h, -include, EngineMinimal.h]
+]]
+
+    local clangd_path = project_dir .. M.slash .. ".clangd"
+    local file = io.open(clangd_path, "w")
+    if file then
+        file:write(clangd_content)
+        file:close()
+    end
+end
+
+--- Setup .clangd files before build script execution
+---@param opts UnrealEngine.Opts Options table
+function M.setup_clangd_files(opts)
+    local clangd_file = ".clangd"
+    local clangd_source = opts.engine_path .. M.slash .. clangd_file
+    local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
+
+    -- Create .clangd file in engine directory first
+    M.create_clangd_file(opts.engine_path)
+
+    -- Symlink .clangd file to project root
+    M.symlink_file(clangd_source, uproject_dir .. M.slash .. clangd_file)
+
+    local plugin_dir = uproject_dir .. M.slash .. "Plugins"
+    local uplugin_files = vim.fs.find(function(name)
+        return name:match(".*%.uplugin$")
+    end, { path = plugin_dir, type = "file", limit = math.huge })
+    for _, uplugin_file in ipairs(uplugin_files) do
+        local uplugin_dir = vim.fn.fnamemodify(uplugin_file, ":h")
+        local current_plugin_clangd = uplugin_dir .. M.slash .. clangd_file
+
+        -- Symlink .clangd file to plugin directory
+        M.symlink_file(clangd_source, current_plugin_clangd)
+    end
+end
+
 --- Link clangd compile_commands.json to project and nested plugins
 ---@param opts UnrealEngine.Opts Options table
 function M.link_clangd_cc(opts)
@@ -430,6 +477,7 @@ function M.link_clangd_cc(opts)
     local source = opts.engine_path .. cc_file
     local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
 
+    -- Symlink compile_commands.json to project root
     M.symlink_file(source, uproject_dir .. cc_file)
 
     local plugin_dir = uproject_dir .. M.slash .. "Plugins"
@@ -440,6 +488,7 @@ function M.link_clangd_cc(opts)
         local uplugin_dir = vim.fn.fnamemodify(uplugin_file, ":h")
         local current_plugin_dir = uplugin_dir .. cc_file
 
+        -- Symlink compile_commands.json to plugin directory
         M.symlink_file(source, current_plugin_dir)
     end
 end
