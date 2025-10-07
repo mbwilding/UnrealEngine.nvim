@@ -1,12 +1,12 @@
 #include "NeovimSourceCodeAccessModule.h"
-#include "Modules/ModuleManager.h"
 #include "Features/IModularFeatures.h"
+#include "Modules/ModuleManager.h"
 
-IMPLEMENT_MODULE( FNeovimSourceCodeAccessModule, NeovimSourceCodeAccess );
+IMPLEMENT_MODULE(FNeovimSourceCodeAccessModule, NeovimSourceCodeAccess);
 
 void FNeovimSourceCodeAccessModule::StartupModule()
 {
-    IModularFeatures::Get().RegisterModularFeature(TEXT("SourceCodeAccessor"), &NeovimSourceCodeAccessor );
+    IModularFeatures::Get().RegisterModularFeature(TEXT("SourceCodeAccessor"), &NeovimSourceCodeAccessor);
 }
 
 void FNeovimSourceCodeAccessModule::ShutdownModule()
@@ -14,7 +14,7 @@ void FNeovimSourceCodeAccessModule::ShutdownModule()
     IModularFeatures::Get().UnregisterModularFeature(TEXT("SourceCodeAccessor"), &NeovimSourceCodeAccessor);
 }
 
-FNeovimSourceCodeAccessor& FNeovimSourceCodeAccessModule::GetAccessor()
+FNeovimSourceCodeAccessor &FNeovimSourceCodeAccessModule::GetAccessor()
 {
     return NeovimSourceCodeAccessor;
 }

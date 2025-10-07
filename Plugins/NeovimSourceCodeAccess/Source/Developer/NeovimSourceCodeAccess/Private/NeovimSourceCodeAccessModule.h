@@ -5,11 +5,11 @@
 
 class FNeovimSourceCodeAccessModule : public IModuleInterface
 {
-public:
+  public:
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
-    FNeovimSourceCodeAccessor& GetAccessor();
+    FNeovimSourceCodeAccessor &GetAccessor();
 
-private:
+  private:
     FNeovimSourceCodeAccessor NeovimSourceCodeAccessor;
 };

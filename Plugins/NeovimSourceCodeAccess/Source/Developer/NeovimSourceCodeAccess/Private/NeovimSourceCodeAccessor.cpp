@@ -1,9 +1,9 @@
 #include "NeovimSourceCodeAccessor.h"
+#include "HAL/PlatformProcess.h"
 #include "Internationalization/Internationalization.h"
 #include "Linux/LinuxPlatformProcess.h"
-#include "Misc/Paths.h"
-#include "HAL/PlatformProcess.h"
 #include "Logging/LogMacros.h"
+#include "Misc/Paths.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogNeovimSourceCodeAccess, Log, All);
 
@@ -33,7 +33,7 @@ bool FNeovimSourceCodeAccessor::OpenSolution()
     return true;
 }
 
-bool FNeovimSourceCodeAccessor::OpenSolutionAtPath(const FString& InSolutionPath)
+bool FNeovimSourceCodeAccessor::OpenSolutionAtPath(const FString &InSolutionPath)
 {
     FString Path = FPaths::GetPath(InSolutionPath);
     FPlatformProcess::ExploreFolder(*Path);
@@ -46,7 +46,7 @@ bool FNeovimSourceCodeAccessor::DoesSolutionExist() const
     return false;
 }
 
-bool FNeovimSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32 LineNumber, int32 ColumnNumber)
+bool FNeovimSourceCodeAccessor::OpenFileAtLine(const FString &FullPath, int32 LineNumber, int32 ColumnNumber)
 {
     if (FullPath.IsEmpty())
         return false;
@@ -72,7 +72,7 @@ bool FNeovimSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32 Li
     return LaunchNeovim(*Arguments);
 }
 
-bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& AbsoluteSourcePaths)
+bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString> &AbsoluteSourcePaths)
 {
     auto files = AbsoluteSourcePaths.Num();
     if (files == 0)
@@ -83,7 +83,7 @@ bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& AbsoluteS
     if (files == 2)
         Arguments += TEXT("-O");
 
-    for (const FString& Path : AbsoluteSourcePaths)
+    for (const FString &Path : AbsoluteSourcePaths)
     {
         if (!Arguments.IsEmpty())
             Arguments += TEXT(" ");
@@ -94,7 +94,7 @@ bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& AbsoluteS
     return LaunchNeovim(*Arguments);
 }
 
-bool FNeovimSourceCodeAccessor::AddSourceFiles(const TArray<FString>& AbsoluteSourcePaths, const TArray<FString>& AvailableModules)
+bool FNeovimSourceCodeAccessor::AddSourceFiles(const TArray<FString> &AbsoluteSourcePaths, const TArray<FString> &AvailableModules)
 {
     return false;
 }
@@ -106,10 +106,9 @@ bool FNeovimSourceCodeAccessor::SaveAllOpenDocuments() const
 
 void FNeovimSourceCodeAccessor::Tick(const float DeltaTime)
 {
-
 }
 
-bool FNeovimSourceCodeAccessor::LaunchNeovim(const TCHAR* Arguments)
+bool FNeovimSourceCodeAccessor::LaunchNeovim(const TCHAR *Arguments)
 {
     FProcHandle ProcHandle = FPlatformProcess::CreateProc(
         TEXT("nvim"),
@@ -120,8 +119,7 @@ bool FNeovimSourceCodeAccessor::LaunchNeovim(const TCHAR* Arguments)
         nullptr,
         0,
         nullptr,
-        nullptr
-    );
+        nullptr);
 
     if (!ProcHandle.IsValid())
     {
