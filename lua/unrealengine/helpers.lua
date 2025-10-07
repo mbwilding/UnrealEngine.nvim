@@ -170,10 +170,24 @@ function M.symlink_file(src, dst)
 
     local link_type = src_stat.type
 
-    local dst_stat = uv.fs_stat(dst)
-    if dst_stat then
+    local dst_lstat = uv.fs_lstat and uv.fs_lstat(dst) or nil
+    if dst_lstat and dst_lstat.type == "link" then
+        -- If dst is a symlink, check where it points
+        local dst_target = uv.fs_readlink(dst)
+        if dst_target == src then
+            -- Already correct symlink
+            return
+        else
+            -- Remove the incorrect symlink
+            local ok, err = uv.fs_unlink(dst)
+            if not ok then
+                error("Failed to remove existing symlink: " .. err)
+            end
+        end
+    elseif dst_lstat and dst_lstat.type ~= "link" then
+        -- If it's a directory or file (not a symlink), remove it
         local ok, err
-        if dst_stat.type == "directory" then
+        if dst_lstat.type == "directory" then
             ok, err = uv.fs_rmdir(dst)
             if not ok then
                 error("Failed to remove existing destination directory: " .. err)
