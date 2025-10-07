@@ -1,0 +1,26 @@
+{
+    "FileVersion": 3,
+    "Version": 1,
+    "VersionName": "1.0",
+    "FriendlyName": "Neovim Integration",
+    "Description": "Allows access to source code in Neovim.",
+    "Category": "Programming",
+    "CreatedBy": "Matthew Wilding",
+    "CreatedByURL": "https://github.com/mbwilding/UnrealEngine.nvim",
+    "DocsURL": "",
+    "MarketplaceURL": "",
+    "SupportURL": "",
+    "EnabledByDefault": true,
+    "CanContainContent": false,
+    "IsBetaVersion": false,
+    "IsExperimentalVersion": false,
+    "Installed": false,
+    "Modules": [
+        {
+            "Name": "NeovimSourceCodeAccess",
+            "Type": "EditorNoCommandlet",
+            "LoadingPhase": "Default",
+            "PlatformAllowList": [ "Win64", "Mac", "Linux" ]
+        }
+    ]
+}

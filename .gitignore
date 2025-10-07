@@ -1,0 +1,16 @@
+# Unreal Engine
+/Config
+/Content
+/Saved
+/Intermediate
+Makefile
+
+# Code Editors
+.idea/
+.vscode/
+*.code-workspace
+
+# Clangd
+compile_commands.json
+.clangd
+.cache/

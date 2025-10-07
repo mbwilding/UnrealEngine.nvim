@@ -1,0 +1,22 @@
+{
+    "FileVersion": 3,
+    "EngineAssociation": "E916212D-CA42-4D2E-940E-D1C0AF4E07F4",
+    "Category": "",
+    "Description": "",
+    "Modules": [
+        {
+            "Name": "Neovim",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        }
+    ],
+    "Plugins": [
+        {
+            "Name": "NeovimSourceCodeAccess",
+            "Enabled": true,
+            "TargetAllowList": [
+                "Editor"
+            ]
+        }
+    ]
+}
