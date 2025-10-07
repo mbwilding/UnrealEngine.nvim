@@ -106,48 +106,50 @@ void FNeovimSourceCodeAccessor::Tick(const float DeltaTime)
 
 bool FNeovimSourceCodeAccessor::LaunchNeovim(const TCHAR *Arguments)
 {
-    // Prefer sending files to an existing Neovim instance if $NVIM is set
-    const FString EnvValue = FPlatformMisc::GetEnvironmentVariable(TEXT("NVIM"));
-    const bool bHasServer = !EnvValue.IsEmpty();
+    const FString RemoteServer = FPlatformMisc::GetEnvironmentVariable(TEXT("NVIM"));
+    const bool bHasServer = !RemoteServer.IsEmpty();
 
-    FProcHandle ProcHandle;
+    bool success;
+    const FString Application = TEXT("nvim");
+    const bool bLaunchDetached = true;
+    const bool bLaunchHidden = false;
+    const bool bLaunchReallyHidden = false;
+
+    // Existing instance
     if (bHasServer)
     {
-        // Build: nvim --server "$NVIM" --remote <Arguments>
-        FString RemoteArgs = FString::Printf(TEXT("--server \"%s\" --remote %s"), *EnvValue, Arguments);
-        ProcHandle = FPlatformProcess::CreateProc(
-            TEXT("nvim"),
+        FString RemoteArgs = FString::Printf(TEXT("--server \"%s\" --remote %s"), *RemoteServer, Arguments);
+        success = FPlatformProcess::ExecProcess(
+            *Application,
             *RemoteArgs,
-            true,
-            false,
-            false,
             nullptr,
-            0,
             nullptr,
             nullptr);
+
+        if (success)
+        {
+            UE_LOG(LogNeovimSourceCodeAccess, Log, TEXT("Successful rpc call to Neovim with arguments: %s"), Arguments);
+            return true;
+        }
     }
 
-    if (!ProcHandle.IsValid())
+    // New instance
     {
-        ProcHandle = FPlatformProcess::CreateProc(
-            TEXT("nvim"),
+        success = FPlatformProcess::ExecProcess(
+            *Application,
             Arguments,
-            true,
-            false,
-            false,
             nullptr,
-            0,
             nullptr,
             nullptr);
+
+        if (success)
+        {
+            UE_LOG(LogNeovimSourceCodeAccess, Log, TEXT("Successfully launched new Neovim instance with arguments: %s"), Arguments);
+            return true;
+        }
     }
 
-    if (!ProcHandle.IsValid())
-    {
-        UE_LOG(LogNeovimSourceCodeAccess, Warning, TEXT("Failed to launch Neovim with arguments: %s"), Arguments);
-        return false;
-    }
-
-    UE_LOG(LogNeovimSourceCodeAccess, Log, TEXT("Successfully launched Neovim with arguments: %s"), Arguments);
-    return true;
+    UE_LOG(LogNeovimSourceCodeAccess, Warning, TEXT("Failed to launch Neovim with arguments: %s"), Arguments);
+    return false;
 }
 #undef LOCTEXT_NAMESPACE
