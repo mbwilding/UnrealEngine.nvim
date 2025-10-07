@@ -1,16 +1,19 @@
 # Unreal Engine
-/Config
-/Content
-/Saved
-/Intermediate
+**/Binaries
+**/Config
+**/Content
+**/DerivedDataCache
+**/Intermediate
+**/Saved
+**/.ignore
 Makefile
 
 # Code Editors
-.idea/
-.vscode/
-*.code-workspace
+**/.idea/
+**/.vscode/
+**/.code-workspace
 
 # Clangd
-compile_commands.json
-.clangd
-.cache/
+**/compile_commands.json
+**/.clangd
+**/.cache/
