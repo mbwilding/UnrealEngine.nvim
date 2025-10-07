@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class Neovim : ModuleRules
+public class Test : ModuleRules
 {
-    public Neovim(ReadOnlyTargetRules Target) : base(Target)
+    public Test(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 

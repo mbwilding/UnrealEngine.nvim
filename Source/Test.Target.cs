@@ -3,13 +3,13 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class NeovimEditorTarget : TargetRules
+public class TestTarget : TargetRules
 {
-    public NeovimEditorTarget( TargetInfo Target) : base(Target)
+    public TestTarget(TargetInfo Target) : base(Target)
     {
-        Type = TargetType.Editor;
+        Type = TargetType.Game;
         DefaultBuildSettings = BuildSettingsVersion.V5;
         IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_6;
-        ExtraModuleNames.Add("Neovim");
+        ExtraModuleNames.Add("Test");
     }
 }

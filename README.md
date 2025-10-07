@@ -2,7 +2,7 @@
 
 Supports Linux, Mac, and Windows
 
-> Currently working on a plugin for Unreal Engine to set Neovim as the editor, not even alpha yet
+> Currently working on a plugin for Unreal Engine to set Neovim as the editor
 
 ## Dependencies
 
