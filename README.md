@@ -64,6 +64,13 @@ return {
             end,
             desc = "UnrealEngine: Clean",
         },
+        {
+            "<leader>ue",
+            function()
+                require("unrealengine.commands").build_engine()
+            end,
+            desc = "UnrealEngine: Build Engine",
+        },
     },
     opts = {
         auto_generate = true, -- Auto generates LSP info when detected in CWD | default: false

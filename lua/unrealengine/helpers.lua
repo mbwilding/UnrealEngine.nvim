@@ -497,4 +497,78 @@ function M.link_clangd_cc(opts)
     end
 end
 
+--- Ensure directory exists (mkdir -p)
+---@param dir string
+local function ensure_dir(dir)
+    if vim.fn.isdirectory(dir) == 1 then
+        return
+    end
+    vim.fn.mkdir(dir, "p")
+end
+
+--- Computes plugin source and destination directories
+---@param opts UnrealEngine.Opts
+---@return string src_dir
+---@return string dst_dir
+---@return string uplugin_path
+function M.get_plugin_paths(opts)
+    local plugin_name = "NeovimSourceCodeAccess"
+    local category = "Developer"
+
+    -- Resolve repo root from this file location: <repo>/lua/unrealengine/helpers.lua
+    local this_file = debug.getinfo(1, 'S').source
+    if vim.startswith(this_file, "@") then this_file = this_file:sub(2) end
+    local repo_root = vim.fn.fnamemodify(this_file, ":h:h:h") -- strip /lua/unrealengine
+
+    local src_dir = table.concat({ repo_root, "Plugins", plugin_name }, M.slash)
+    if not vim.loop.fs_stat(src_dir) then
+        error("Plugin source directory not found at: " .. src_dir)
+    end
+
+    local engine_plugins_root = table.concat({ opts.engine_path, "Engine", "Plugins", category }, M.slash)
+    local dst_dir = table.concat({ engine_plugins_root, plugin_name }, M.slash)
+    local uplugin_path = table.concat({ dst_dir, plugin_name .. ".uplugin" }, M.slash)
+
+    return src_dir, dst_dir, uplugin_path
+end
+
+--- Returns true if the engine has the plugin symlinked to the given source
+---@param opts UnrealEngine.Opts
+---@return boolean
+function M.is_plugin_symlinked(opts)
+    local src_dir, dst_dir = M.get_plugin_paths(opts)
+    local lstat = vim.loop.fs_lstat and vim.loop.fs_lstat(dst_dir) or nil
+    if not lstat or lstat.type ~= "link" then
+        return false
+    end
+    local dst_target = vim.loop.fs_readlink(dst_dir)
+    return dst_target == src_dir
+end
+
+--- Ensures the plugin is symlinked into the engine tree
+---@param opts UnrealEngine.Opts
+function M.link_plugin(opts)
+    local src_dir, dst_dir = M.get_plugin_paths(opts)
+    ensure_dir(vim.fn.fnamemodify(dst_dir, ":h"))
+    M.symlink_file(src_dir, dst_dir)
+end
+
+--- Links plugin and builds the engine editor target which compiles the plugin too
+---@param opts UnrealEngine.Opts
+function M.build_engine(opts)
+    M.link_plugin(opts)
+    local script = M.get_build_script_path(opts)
+    local cmd = {
+        M.wrap(script),
+        "UnrealEditor",
+        opts.platform,
+        opts.build_type,
+        "",
+        "-engine",
+        "-Editor",
+    }
+    local formatted_cmd = table.concat(cmd, " ")
+    M.execute_command((jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd, opts)
+end
+
 return M

@@ -20,6 +20,13 @@ function M.build(opts)
     M.generate_lsp(opts)
 end
 
+--- Link plugin and build engine editor (compiles plugin too)
+---@param opts UnrealEngine.Opts|nil
+function M.build_engine(opts)
+    opts = vim.tbl_deep_extend("force", engine.options, opts or {})
+    helpers.build_engine(opts)
+end
+
 --- Opens the project in UE
 ---@param opts UnrealEngine.Opts|nil Options table
 function M.open(opts)
