@@ -452,9 +452,8 @@ function M.setup_clangd_files(opts)
     -- Create .clangd file in engine directory first
     M.create_clangd_file(opts.engine_path)
 
-    local clangd_project_source = uproject_dir .. M.slash .. clangd_file
     -- Symlink .clangd file to project root
-    M.symlink_file(clangd_source, clangd_project_source)
+    M.symlink_file(clangd_source, uproject_dir .. M.slash .. clangd_file)
 
     local plugin_dir = uproject_dir .. M.slash .. "Plugins"
     local uplugin_files = vim.fs.find(function(name)
@@ -465,7 +464,7 @@ function M.setup_clangd_files(opts)
         local current_plugin_clangd = uplugin_dir .. M.slash .. clangd_file
 
         -- Symlink .clangd file to plugin directory
-        M.symlink_file(clangd_project_source, current_plugin_clangd)
+        M.symlink_file(clangd_source, current_plugin_clangd)
     end
 end
 
