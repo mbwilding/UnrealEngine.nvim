@@ -352,13 +352,6 @@ function M.open_unreal_editor(opts)
         cmd = M.wrap(engine_binary_path)
     end
 
-    -- Remote control
-    if (vim.v.servername == nil or vim.v.servername == "") then
-        pcall(function()
-            vim.fn.serverstart(vim.fn.tempname())
-        end)
-    end
-
     local environment_variables = ""
     if opts.environment_variables and jit.os ~= "Windows" then
         for k, v in pairs(opts.environment_variables) do
@@ -370,6 +363,9 @@ function M.open_unreal_editor(opts)
         cmd = environment_variables .. cmd
     end
 
+    -- Start remote server
+    M.remote_start()
+    -- Start Unreal Engine
     vim.fn.jobstart(cmd, { detach = true })
 end
 
@@ -500,6 +496,15 @@ function M.link_clangd_cc(opts)
 
         -- Symlink compile_commands.json to plugin directory
         M.symlink_file(source, current_plugin_dir)
+    end
+end
+
+--- Start the remote control server
+function M.remote_start()
+    if (vim.v.servername == nil or vim.v.servername == "") then
+        pcall(function()
+            vim.fn.serverstart(vim.fn.tempname())
+        end)
     end
 end
 
