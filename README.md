@@ -2,7 +2,7 @@
 
 Supports Linux, Mac, and Windows
 
-> Currently working on a plugin for Unreal Engine to set Neovim as the editor
+> I'm developing a plugin for Unreal Engine that integrates Neovim as the code editor. To ensure files open in the correct Neovim instance (maintaining an active LSP session), Unreal Engine 5 needs to be launched from within Neovim.
 
 ## Dependencies
 

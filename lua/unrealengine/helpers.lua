@@ -352,6 +352,13 @@ function M.open_unreal_editor(opts)
         cmd = M.wrap(engine_binary_path)
     end
 
+    -- Remote control
+    if (vim.v.servername == nil or vim.v.servername == "") then
+        pcall(function()
+            vim.fn.serverstart(vim.fn.tempname())
+        end)
+    end
+
     local environment_variables = ""
     if opts.environment_variables and jit.os ~= "Windows" then
         for k, v in pairs(opts.environment_variables) do

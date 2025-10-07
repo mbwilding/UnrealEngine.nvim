@@ -79,10 +79,6 @@ bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString> &AbsoluteS
         return false;
 
     FString Arguments;
-
-    if (files == 2)
-        Arguments += TEXT("-O");
-
     for (const FString &Path : AbsoluteSourcePaths)
     {
         if (!Arguments.IsEmpty())
@@ -110,16 +106,40 @@ void FNeovimSourceCodeAccessor::Tick(const float DeltaTime)
 
 bool FNeovimSourceCodeAccessor::LaunchNeovim(const TCHAR *Arguments)
 {
-    FProcHandle ProcHandle = FPlatformProcess::CreateProc(
-        TEXT("nvim"),
-        Arguments,
-        true,
-        false,
-        false,
-        nullptr,
-        0,
-        nullptr,
-        nullptr);
+    // Prefer sending files to an existing Neovim instance if $NVIM is set
+    const FString EnvValue = FPlatformMisc::GetEnvironmentVariable(TEXT("NVIM"));
+    const bool bHasServer = !EnvValue.IsEmpty();
+
+    FProcHandle ProcHandle;
+    if (bHasServer)
+    {
+        // Build: nvim --server "$NVIM" --remote <Arguments>
+        FString RemoteArgs = FString::Printf(TEXT("--server \"%s\" --remote %s"), *EnvValue, Arguments);
+        ProcHandle = FPlatformProcess::CreateProc(
+            TEXT("nvim"),
+            *RemoteArgs,
+            true,
+            false,
+            false,
+            nullptr,
+            0,
+            nullptr,
+            nullptr);
+    }
+
+    if (!ProcHandle.IsValid())
+    {
+        ProcHandle = FPlatformProcess::CreateProc(
+            TEXT("nvim"),
+            Arguments,
+            true,
+            false,
+            false,
+            nullptr,
+            0,
+            nullptr,
+            nullptr);
+    }
 
     if (!ProcHandle.IsValid())
     {

@@ -11,7 +11,7 @@ Makefile
 # Code Editors
 **/.idea/
 **/.vscode/
-**/.code-workspace
+**.code-workspace
 
 # Clangd
 **/compile_commands.json
