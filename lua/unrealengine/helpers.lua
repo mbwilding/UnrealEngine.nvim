@@ -363,8 +363,6 @@ function M.open_unreal_editor(opts)
         cmd = environment_variables .. cmd
     end
 
-    -- Start remote server
-    M.remote_start()
     -- Start Unreal Engine
     vim.fn.jobstart(cmd, { detach = true })
 end
@@ -496,19 +494,6 @@ function M.link_clangd_cc(opts)
 
         -- Symlink compile_commands.json to plugin directory
         M.symlink_file(source, current_plugin_dir)
-    end
-end
-
---- Start the remote control server
-function M.remote_start()
-    if vim.v.servername == nil or vim.v.servername == "" then
-        local server_addr
-        if vim.fn.has("win32") == 1 then
-            server_addr = "\\\\.\\pipe\\nvim-" .. vim.fn.getpid()
-        else
-            server_addr = vim.fn.tempname()
-        end
-        vim.fn.serverstart(server_addr)
     end
 end
 

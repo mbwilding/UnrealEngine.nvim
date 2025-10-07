@@ -106,20 +106,13 @@ void FNeovimSourceCodeAccessor::Tick(const float DeltaTime)
 
 bool FNeovimSourceCodeAccessor::LaunchNeovim(const TCHAR *Arguments)
 {
-    const FString RemoteServer = FPlatformMisc::GetEnvironmentVariable(TEXT("NVIM"));
-    const bool bHasServer = !RemoteServer.IsEmpty();
-
-    bool success;
     const FString Application = TEXT("nvim");
-    const bool bLaunchDetached = true;
-    const bool bLaunchHidden = false;
-    const bool bLaunchReallyHidden = false;
+    const FString RemoteServer = FPlatformMisc::GetEnvironmentVariable(TEXT("NVIM"));
 
-    // Existing instance
-    if (bHasServer)
+    if (!RemoteServer.IsEmpty())
     {
         FString RemoteArgs = FString::Printf(TEXT("--server \"%s\" --remote %s"), *RemoteServer, Arguments);
-        success = FPlatformProcess::ExecProcess(
+        bool success = FPlatformProcess::ExecProcess(
             *Application,
             *RemoteArgs,
             nullptr,
@@ -128,28 +121,12 @@ bool FNeovimSourceCodeAccessor::LaunchNeovim(const TCHAR *Arguments)
 
         if (success)
         {
-            UE_LOG(LogNeovimSourceCodeAccess, Log, TEXT("Successful rpc call to Neovim with arguments: %s"), Arguments);
+            UE_LOG(LogNeovimSourceCodeAccess, Log, TEXT("%s: %s %s"), *RemoteServer, *Application, *RemoteArgs);
             return true;
         }
     }
 
-    // New instance
-    {
-        success = FPlatformProcess::ExecProcess(
-            *Application,
-            Arguments,
-            nullptr,
-            nullptr,
-            nullptr);
-
-        if (success)
-        {
-            UE_LOG(LogNeovimSourceCodeAccess, Log, TEXT("Successfully launched new Neovim instance with arguments: %s"), Arguments);
-            return true;
-        }
-    }
-
-    UE_LOG(LogNeovimSourceCodeAccess, Warning, TEXT("Failed to launch Neovim with arguments: %s"), Arguments);
+    UE_LOG(LogNeovimSourceCodeAccess, Warning, TEXT("Failed to communicate with Neovim, try launching UE via UnrealEngine.nvim"));
     return false;
 }
 #undef LOCTEXT_NAMESPACE
