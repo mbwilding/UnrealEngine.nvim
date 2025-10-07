@@ -69,7 +69,7 @@ return {
             function()
                 require("unrealengine.commands").build_engine()
             end,
-            desc = "UnrealEngine: Build Engine",
+            desc = "UnrealEngine: Link Plugin - Build Engine",
         },
     },
     opts = {
