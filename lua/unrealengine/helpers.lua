@@ -500,6 +500,7 @@ function M.get_plugin_paths(opts)
         error("Plugin source directory not found at: " .. src_dir)
     end
 
+    print("503: " .. opts.engine_path)
     local engine_plugins_root = table.concat({ opts.engine_path, "Engine", "Plugins", category }, M.slash)
     local dst_dir = table.concat({ engine_plugins_root, plugin_name }, M.slash)
     local uplugin_path = table.concat({ dst_dir, plugin_name .. ".uplugin" }, M.slash)
@@ -511,6 +512,7 @@ end
 ---@param opts UnrealEngine.Opts
 ---@return boolean
 function M.is_plugin_symlinked(opts)
+    print("515: " .. opts.engine_path)
     local src_dir, dst_dir = M.get_plugin_paths(opts)
     local lstat = vim.loop.fs_lstat and vim.loop.fs_lstat(dst_dir) or nil
     if not lstat or lstat.type ~= "link" then
@@ -523,6 +525,7 @@ end
 --- Ensures the plugin is symlinked into the engine tree
 ---@param opts UnrealEngine.Opts
 function M.link_plugin(opts)
+    print("528: " .. opts.engine_path)
     local src_dir, dst_dir = M.get_plugin_paths(opts)
     ensure_dir(vim.fn.fnamemodify(dst_dir, ":h"))
     M.symlink_file(src_dir, dst_dir)
@@ -531,6 +534,7 @@ end
 --- Links plugin and builds the engine editor target which compiles the plugin too
 ---@param opts UnrealEngine.Opts
 function M.build_engine(opts)
+    print("537: " .. opts.engine_path)
     M.link_plugin(opts)
     local script = M.get_build_script_path(opts)
     local cmd = {

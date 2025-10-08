@@ -23,6 +23,7 @@ end
 --- Link plugin and build engine editor (compiles plugin too)
 ---@param opts UnrealEngine.Opts|nil
 function M.build_engine(opts)
+    print("26: " .. opts and opts.engine_path or "nil")
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
     helpers.build_engine(opts)
 end
