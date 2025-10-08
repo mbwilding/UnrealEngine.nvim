@@ -3,3 +3,12 @@ IndentWidth: 4
 UseTab: Never
 BreakBeforeBraces: Allman
 ColumnLimit: 0
+SortIncludes: true
+IncludeCategories:
+  # Normal
+  - Regex: '^".*[^"]$'
+    Priority: 2
+
+  # Generated
+  - Regex: '^".*\.generated\.h"$'
+    Priority: 3
