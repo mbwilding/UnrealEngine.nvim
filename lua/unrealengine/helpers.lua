@@ -36,14 +36,14 @@ function M.find_uproject(directory)
 end
 
 --- Validates and returns a valid engine path
----@param engine_path string|table<string> Engine path
+---@param engine_path string Engine path
 function M.validate_engine_path(engine_path)
     if engine_path == nil then
         error("engine_path cannot be nil")
     end
 
     if type(engine_path) ~= "string" then
-        error("engine_path must be a string or table of strings: " .. vim.inspect(engine_path))
+        error("engine_path must be a string: " .. vim.inspect(engine_path))
     end
 
     local stat = vim.loop.fs_stat(engine_path)
@@ -294,8 +294,8 @@ function M.execute_build_script(args, opts, on_complete)
     local cmd = {
         M.wrap(script),
         M.wrap(uproject.name .. "Editor"),
-        opts.platform,
-        opts.build_type,
+        M.get_platform(),
+        opts.build_type or "Development",
         (args or "") .. M.wrap(uproject.path),
         "-game -engine",
         (opts.with_editor and "-Editor " or ""),
@@ -536,9 +536,8 @@ function M.build_engine(opts)
     local cmd = {
         M.wrap(script),
         "UnrealEditor",
-        opts.platform,
-        opts.build_type,
-        "",
+        M.get_platform(),
+        opts.build_type or "Development",
         "-engine",
         "-Editor",
     }

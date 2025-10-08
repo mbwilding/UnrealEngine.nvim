@@ -72,7 +72,8 @@ return {
     },
     -- Optional, this will update and build the Unreal Engine plugin on update
     build = function()
-        require("unrealengine.commands").build_engine()
+        -- Path required to be passed in
+        require("unrealengine.commands").build_engine({ engine_path = "/path/to/UnrealEngine" })
     end,
     opts = {
         auto_generate = true, -- Auto generates LSP info when detected in CWD | default: false
