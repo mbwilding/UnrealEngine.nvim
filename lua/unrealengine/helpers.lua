@@ -491,10 +491,9 @@ function M.get_plugin_paths(opts)
     local plugin_name = "NeovimSourceCodeAccess"
     local category = "Developer"
 
-    -- Resolve repo root from this file location: <repo>/lua/unrealengine/helpers.lua
     local this_file = debug.getinfo(1, 'S').source
     if vim.startswith(this_file, "@") then this_file = this_file:sub(2) end
-    local repo_root = vim.fn.fnamemodify(this_file, ":h:h:h") -- strip /lua/unrealengine
+    local repo_root = vim.fn.fnamemodify(this_file, ":h:h:h")
 
     local src_dir = table.concat({ repo_root, "Plugins", plugin_name }, M.slash)
     if not vim.loop.fs_stat(src_dir) then
