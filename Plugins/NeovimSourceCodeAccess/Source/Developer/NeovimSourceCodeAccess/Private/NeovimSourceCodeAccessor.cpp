@@ -30,20 +30,20 @@ FText FNeovimSourceCodeAccessor::GetDescriptionText() const
 
 bool FNeovimSourceCodeAccessor::OpenSolution()
 {
-    return true;
+    FString Arguments = FString::Printf(TEXT("\":Ex %s<CR>\""), *CurrentWorkingDirectory);
+    return NeovimExecute(TEXT("remote-send"), *Arguments);
 }
 
 bool FNeovimSourceCodeAccessor::OpenSolutionAtPath(const FString &InSolutionPath)
 {
     FString Path = FPaths::GetPath(InSolutionPath);
-    FPlatformProcess::ExploreFolder(*Path);
-
-    return true;
+    FString Arguments = FString::Printf(TEXT("\":Ex %s<CR>\""), *Path);
+    return NeovimExecute(TEXT("remote-send"), *Arguments);
 }
 
 bool FNeovimSourceCodeAccessor::DoesSolutionExist() const
 {
-    return false;
+    return FPaths::DirectoryExists(CurrentWorkingDirectory);
 }
 
 bool FNeovimSourceCodeAccessor::OpenFileAtLine(const FString &FullPath, int32 LineNumber, int32 ColumnNumber)
@@ -69,7 +69,7 @@ bool FNeovimSourceCodeAccessor::OpenFileAtLine(const FString &FullPath, int32 Li
         Arguments = FString::Printf(TEXT("\"%s\""), *FullPath);
     }
 
-    return LaunchNeovim(*Arguments);
+    return NeovimExecute(TEXT("remote"), *Arguments);
 }
 
 bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString> &AbsoluteSourcePaths)
@@ -87,7 +87,7 @@ bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString> &AbsoluteS
         Arguments += FString::Printf(TEXT("\"%s\""), *Path);
     }
 
-    return LaunchNeovim(*Arguments);
+    return NeovimExecute(TEXT("remote"), *Arguments);
 }
 
 bool FNeovimSourceCodeAccessor::AddSourceFiles(const TArray<FString> &AbsoluteSourcePaths, const TArray<FString> &AvailableModules)
@@ -97,29 +97,27 @@ bool FNeovimSourceCodeAccessor::AddSourceFiles(const TArray<FString> &AbsoluteSo
 
 bool FNeovimSourceCodeAccessor::SaveAllOpenDocuments() const
 {
-    return false;
+    const FString Arguments = FString::Printf(TEXT("\":wa<CR>\""));
+    return NeovimExecute(TEXT("remote-send"), *Arguments);
 }
 
 void FNeovimSourceCodeAccessor::Tick(const float DeltaTime)
 {
 }
 
-bool FNeovimSourceCodeAccessor::LaunchNeovim(const TCHAR *Arguments)
+bool FNeovimSourceCodeAccessor::NeovimExecute(const TCHAR *Command, const TCHAR *Arguments) const
 {
-    const FString Application = TEXT("nvim");
-    const FString RemoteServer = FPlatformMisc::GetEnvironmentVariable(TEXT("NVIM"));
-
     if (!RemoteServer.IsEmpty())
     {
-        FString RemoteArgs = FString::Printf(TEXT("--server \"%s\" --remote %s"), *RemoteServer, Arguments);
-        bool success = FPlatformProcess::ExecProcess(
+        FString RemoteArgs = FString::Printf(TEXT("--server \"%s\" --%s %s"), *RemoteServer, Command, Arguments);
+        bool bSuccess = FPlatformProcess::ExecProcess(
             *Application,
             *RemoteArgs,
             nullptr,
             nullptr,
             nullptr);
 
-        if (success)
+        if (bSuccess)
         {
             UE_LOG(LogNeovimSourceCodeAccess, Log, TEXT("%s: %s %s"), *RemoteServer, *Application, *RemoteArgs);
             return true;
