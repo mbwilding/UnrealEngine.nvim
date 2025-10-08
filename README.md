@@ -77,7 +77,7 @@ return {
     opts = {
         auto_generate = true, -- Auto generates LSP info when detected in CWD | default: false
         auto_build = true, -- Auto builds on save | default: false
-        engine_path = "/path/to/UnrealEngine", -- Path to your UnrealEngine source directory, you can also provide a table of strings
+        engine_path = "/path/to/UnrealEngine", -- Path to your UnrealEngine source directory
         -- More settings are in the `lua/unrealengine/init.lua` file
     }
 }
