@@ -538,7 +538,6 @@ function M.build_engine(opts)
         "UnrealEditor",
         M.get_platform(),
         opts.build_type,
-        "",
         "-engine",
         "-Editor",
     }
