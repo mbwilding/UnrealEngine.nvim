@@ -367,9 +367,6 @@ function M.clean(opts)
     local plugin_paths_to_remove = {
         "Binaries",
         "Intermediate",
-        ".cache",
-        "compile_commands.json",
-        ".clangd",
     }
 
     for _, path in ipairs(root_paths_to_remove) do
@@ -377,7 +374,6 @@ function M.clean(opts)
         vim.fn.delete(target, "rf")
     end
 
-    -- Clean .clangd file from engine directory
     local engine_clangd = opts.engine_path .. M.slash .. ".clangd"
     vim.fn.delete(engine_clangd, "rf")
 
@@ -401,8 +397,6 @@ function M.clean(opts)
                     vim.fn.delete(current_object_path, "rf")
                 end
             end
-        else
-            vim.notify("Could not scan Plugins directory", vim.log.levels.ERROR)
         end
     end
 end
@@ -429,23 +423,8 @@ function M.setup_clangd_files(opts)
     local clangd_source = opts.engine_path .. M.slash .. clangd_file
     local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
 
-    -- Create .clangd file in engine directory first
     M.create_clangd_file(opts.engine_path)
-
-    -- Symlink .clangd file to project root
     M.symlink_file(clangd_source, uproject_dir .. M.slash .. clangd_file)
-
-    local plugin_dir = uproject_dir .. M.slash .. "Plugins"
-    local uplugin_files = vim.fs.find(function(name)
-        return name:match(".*%.uplugin$")
-    end, { path = plugin_dir, type = "file", limit = math.huge })
-    for _, uplugin_file in ipairs(uplugin_files) do
-        local uplugin_dir = vim.fn.fnamemodify(uplugin_file, ":h")
-        local current_plugin_clangd = uplugin_dir .. M.slash .. clangd_file
-
-        -- Symlink .clangd file to plugin directory
-        M.symlink_file(clangd_source, current_plugin_clangd)
-    end
 end
 
 --- Link clangd compile_commands.json to project and nested plugins
@@ -457,20 +436,7 @@ function M.link_clangd_cc(opts)
     local source = opts.engine_path .. cc_file
     local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
 
-    -- Symlink compile_commands.json to project root
     M.symlink_file(source, uproject_dir .. cc_file)
-
-    local plugin_dir = uproject_dir .. M.slash .. "Plugins"
-    local uplugin_files = vim.fs.find(function(name)
-        return name:match(".*%.uplugin$")
-    end, { path = plugin_dir, type = "file", limit = math.huge })
-    for _, uplugin_file in ipairs(uplugin_files) do
-        local uplugin_dir = vim.fn.fnamemodify(uplugin_file, ":h")
-        local current_plugin_dir = uplugin_dir .. cc_file
-
-        -- Symlink compile_commands.json to plugin directory
-        M.symlink_file(source, current_plugin_dir)
-    end
 end
 
 --- Ensure directory exists (mkdir -p)
@@ -491,8 +457,10 @@ function M.get_plugin_paths(opts)
     local plugin_name = "NeovimSourceCodeAccess"
     local category = "Developer"
 
-    local this_file = debug.getinfo(1, 'S').source
-    if vim.startswith(this_file, "@") then this_file = this_file:sub(2) end
+    local this_file = debug.getinfo(1, "S").source
+    if vim.startswith(this_file, "@") then
+        this_file = this_file:sub(2)
+    end
     local repo_root = vim.fn.fnamemodify(this_file, ":h:h:h")
 
     local src_dir = table.concat({ repo_root, "Plugins", plugin_name }, M.slash)
