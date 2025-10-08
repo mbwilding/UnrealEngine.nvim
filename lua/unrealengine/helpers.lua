@@ -529,8 +529,12 @@ function M.link_plugin(opts)
 end
 
 --- Links plugin and builds the engine editor target which compiles the plugin too
----@param opts UnrealEngine.Opts
+---@param opts UnrealEngine.Opts|nil
 function M.build_engine(opts)
+    if opts == nil then
+        error("opts is required but was nil, engine_path required")
+    end
+
     M.link_plugin(opts)
     local script = M.get_build_script_path(opts)
     local cmd = {
