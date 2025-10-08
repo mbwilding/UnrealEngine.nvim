@@ -295,7 +295,7 @@ function M.execute_build_script(args, opts, on_complete)
         M.wrap(script),
         M.wrap(uproject.name .. "Editor"),
         M.get_platform(),
-        opts.build_type,
+        opts.build_type or "Development",
         (args or "") .. M.wrap(uproject.path),
         "-game -engine",
         (opts.with_editor and "-Editor " or ""),
@@ -537,7 +537,7 @@ function M.build_engine(opts)
         M.wrap(script),
         "UnrealEditor",
         M.get_platform(),
-        opts.build_type,
+        opts.build_type or "Development",
         "-engine",
         "-Editor",
     }
