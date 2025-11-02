@@ -405,10 +405,11 @@ end
 ---@param project_dir string Project directory path
 ---@param clangd_file_name string File name for clangd
 function M.create_clangd_file(project_dir, clangd_file_name)
-    local clangd_content = [[
+    local clangd_content = [[---
 CompileFlags:
   CompiliationDatabase: ./
 
+---
 If:
   PathMatch:
     - "(Source|Plugins)/.*\\.(cpp|h)"
