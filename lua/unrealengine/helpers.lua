@@ -406,7 +406,7 @@ end
 function M.create_clangd_file(project_dir)
     local clangd_content = [[---
 CompileFlags:
-  CompiliationDatabase: ./
+  CompilationDatabase: ./
 Index:
   Background: Build
 ]]
