@@ -403,12 +403,46 @@ end
 
 --- Creates a .clangd file with Unreal Engine includes
 ---@param project_dir string Project directory path
-function M.create_clangd_file(project_dir)
-    local clangd_content = [[CompileFlags:
-Add: [-include, CoreMinimal.h, -include, EngineMinimal.h]
+---@param clangd_file_name string File name for clangd
+function M.create_clangd_file(project_dir, clangd_file_name)
+    local clangd_content = [[
+CompileFlags:
+  CompiliationDatabase: ./
+
+If:
+  PathMatch:
+    - "(Source|Plugins)/.*\.(cpp|h)"
+CompileFlags:
+  Add:
+    # Maybe not needed
+    - "-DUE_BUILD_DEVELOPMENT=1"
+    - "-DUNICODE"
+    - "-D_UNICODE"
+    - "-DUSE_NULL_RHI=0"
+    # Includes
+    - "-include"
+    - "CoreMinimal.h"
+    - "-include"
+    - "EngineMinimal.h"
+    - "-include"
+    - "TimerManager.h"
+    - "-include"
+    - "Engine/LocalPlayer.h"
+
+Index:
+  Background: Build
+Diagnostics:
+  ClangTidy:
+    Add:
+      - performance-*
+      - readability-*
+      - modernize-*
+    Remove:
+      - clang-analyzer-*
+  UnusedIncludes: Strict
 ]]
 
-    local clangd_path = project_dir .. M.slash .. ".clangd"
+    local clangd_path = project_dir .. M.slash .. clangd_file_name
     local file = io.open(clangd_path, "w")
     if file then
         file:write(clangd_content)
@@ -419,12 +453,12 @@ end
 --- Setup .clangd files before build script execution
 ---@param opts UnrealEngine.Opts Options table
 function M.setup_clangd_files(opts)
-    local clangd_file = ".clangd"
-    local clangd_source = opts.engine_path .. M.slash .. clangd_file
+    local clangd_file_name = ".clangd"
+    local clangd_source = opts.engine_path .. M.slash .. clangd_file_name
     local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
 
-    M.create_clangd_file(opts.engine_path)
-    M.symlink_file(clangd_source, uproject_dir .. M.slash .. clangd_file)
+    M.create_clangd_file(opts.engine_path, clangd_file_name)
+    M.symlink_file(clangd_source, uproject_dir .. M.slash .. clangd_file_name)
 end
 
 --- Link clangd compile_commands.json to project and nested plugins
