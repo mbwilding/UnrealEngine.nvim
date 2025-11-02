@@ -121,7 +121,7 @@ function M.get_uproject_path_info(uproject_path)
     else
         local files = vim.fs.find(function(name)
             return name:match("%.uproject$")
-        end, { path = cwd, max_depth = 1 })
+        end, { path = cwd, type = "file", max_depth = 1, limit = 1 })
 
         if #files > 0 then
             return {
@@ -403,47 +403,15 @@ end
 
 --- Creates a .clangd file with Unreal Engine includes
 ---@param project_dir string Project directory path
----@param clangd_file_name string File name for clangd
-function M.create_clangd_file(project_dir, clangd_file_name)
+function M.create_clangd_file(project_dir)
     local clangd_content = [[---
 CompileFlags:
   CompiliationDatabase: ./
-
----
-If:
-  PathMatch:
-    - "(Source|Plugins)/.*\\.(cpp|h)"
-CompileFlags:
-  Add:
-    # Maybe not needed
-    - "-DUE_BUILD_DEVELOPMENT=1"
-    - "-DUNICODE"
-    - "-D_UNICODE"
-    - "-DUSE_NULL_RHI=0"
-    # Includes
-    - "-include"
-    - "CoreMinimal.h"
-    - "-include"
-    - "EngineMinimal.h"
-    - "-include"
-    - "TimerManager.h"
-    - "-include"
-    - "Engine/LocalPlayer.h"
-
 Index:
   Background: Build
-Diagnostics:
-  ClangTidy:
-    Add:
-      - performance-*
-      - readability-*
-      - modernize-*
-    Remove:
-      - clang-analyzer-*
-  UnusedIncludes: Strict
 ]]
 
-    local clangd_path = project_dir .. M.slash .. clangd_file_name
+    local clangd_path = project_dir .. M.slash .. ".clangd"
     local file = io.open(clangd_path, "w")
     if file then
         file:write(clangd_content)
@@ -458,7 +426,7 @@ function M.setup_clangd_files(opts)
     local clangd_source = opts.engine_path .. M.slash .. clangd_file_name
     local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
 
-    M.create_clangd_file(opts.engine_path, clangd_file_name)
+    M.create_clangd_file(opts.engine_path)
     M.symlink_file(clangd_source, uproject_dir .. M.slash .. clangd_file_name)
 end
 
