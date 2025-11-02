@@ -411,7 +411,7 @@ CompileFlags:
 
 If:
   PathMatch:
-    - "(Source|Plugins)/.*\.(cpp|h)"
+    - "(Source|Plugins)/.*\\.(cpp|h)"
 CompileFlags:
   Add:
     # Maybe not needed
