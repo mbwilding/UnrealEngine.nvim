@@ -34,7 +34,7 @@ bool FNeovimSourceCodeAccessor::OpenSolution()
     return NeovimExecute(TEXT("remote-send"), *Arguments);
 }
 
-bool FNeovimSourceCodeAccessor::OpenSolutionAtPath(const FString &InSolutionPath)
+bool FNeovimSourceCodeAccessor::OpenSolutionAtPath(const FString& InSolutionPath)
 {
     FString Path = FPaths::GetPath(InSolutionPath);
     FString Arguments = FString::Printf(TEXT("\":Ex %s<CR>\""), *Path);
@@ -46,7 +46,7 @@ bool FNeovimSourceCodeAccessor::DoesSolutionExist() const
     return FPaths::DirectoryExists(CurrentWorkingDirectory);
 }
 
-bool FNeovimSourceCodeAccessor::OpenFileAtLine(const FString &FullPath, int32 LineNumber, int32 ColumnNumber)
+bool FNeovimSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32 LineNumber, int32 ColumnNumber)
 {
     if (FullPath.IsEmpty())
         return false;
@@ -72,14 +72,14 @@ bool FNeovimSourceCodeAccessor::OpenFileAtLine(const FString &FullPath, int32 Li
     return NeovimExecute(TEXT("remote"), *Arguments);
 }
 
-bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString> &AbsoluteSourcePaths)
+bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& AbsoluteSourcePaths)
 {
     auto files = AbsoluteSourcePaths.Num();
     if (files == 0)
         return false;
 
     FString Arguments;
-    for (const FString &Path : AbsoluteSourcePaths)
+    for (const FString& Path : AbsoluteSourcePaths)
     {
         if (!Arguments.IsEmpty())
             Arguments += TEXT(" ");
@@ -90,7 +90,7 @@ bool FNeovimSourceCodeAccessor::OpenSourceFiles(const TArray<FString> &AbsoluteS
     return NeovimExecute(TEXT("remote"), *Arguments);
 }
 
-bool FNeovimSourceCodeAccessor::AddSourceFiles(const TArray<FString> &AbsoluteSourcePaths, const TArray<FString> &AvailableModules)
+bool FNeovimSourceCodeAccessor::AddSourceFiles(const TArray<FString>& AbsoluteSourcePaths, const TArray<FString>& AvailableModules)
 {
     return false;
 }
@@ -105,7 +105,7 @@ void FNeovimSourceCodeAccessor::Tick(const float DeltaTime)
 {
 }
 
-bool FNeovimSourceCodeAccessor::NeovimExecute(const TCHAR *Command, const TCHAR *Arguments) const
+bool FNeovimSourceCodeAccessor::NeovimExecute(const TCHAR* Command, const TCHAR* Arguments) const
 {
     if (!RemoteServer.IsEmpty())
     {

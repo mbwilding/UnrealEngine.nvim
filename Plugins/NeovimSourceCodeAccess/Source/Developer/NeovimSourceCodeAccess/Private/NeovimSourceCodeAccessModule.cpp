@@ -14,7 +14,7 @@ void FNeovimSourceCodeAccessModule::ShutdownModule()
     IModularFeatures::Get().UnregisterModularFeature(TEXT("SourceCodeAccessor"), &NeovimSourceCodeAccessor);
 }
 
-FNeovimSourceCodeAccessor &FNeovimSourceCodeAccessModule::GetAccessor()
+FNeovimSourceCodeAccessor& FNeovimSourceCodeAccessModule::GetAccessor()
 {
     return NeovimSourceCodeAccessor;
 }

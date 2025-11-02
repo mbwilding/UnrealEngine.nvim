@@ -3,6 +3,7 @@ IndentWidth: 4
 UseTab: Never
 BreakBeforeBraces: Allman
 ColumnLimit: 0
+PointerAlignment: Left
 SortIncludes: true
 IncludeCategories:
   # Normal
