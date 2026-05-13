@@ -514,13 +514,10 @@ function M.build_plugin(opts)
     M.execute_command(cmd, opts)
 end
 
---- Links plugin and builds the engine editor target which compiles the plugin too
+--- Links plugin and builds the engine editor target which compiles the plugin too.
+--- Only call this on source engine installs; use build_plugin() for binary installs.
 ---@param opts UnrealEngine.Opts
 function M.build_engine(opts)
-    if not M.is_source_engine(opts) then
-        vim.notify("build_engine() requires a source build of Unreal Engine. For binary installs, use build_plugin() instead.", vim.log.levels.ERROR)
-        return
-    end
     M.link_plugin(opts)
     local script = M.get_build_script_path(opts)
     local cmd = { script, "UnrealEditor", M.get_platform(), opts.build_type or "Development", "-engine", "-Editor" }

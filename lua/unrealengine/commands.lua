@@ -20,11 +20,17 @@ function M.build(opts)
     M.generate_lsp(opts)
 end
 
---- Link plugin and build engine editor (compiles plugin too)
+--- Installs the NeovimSourceCodeAccess plugin into the engine.
+--- On source engine installs, symlinks the plugin and builds the full editor target.
+--- On binary engine installs, uses RunUAT BuildPlugin instead.
 ---@param opts UnrealEngine.Opts|nil
 function M.build_engine(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
-    helpers.build_engine(opts)
+    if helpers.is_source_engine(opts) then
+        helpers.build_engine(opts)
+    else
+        helpers.build_plugin(opts)
+    end
 end
 
 --- Builds just the NeovimSourceCodeAccess plugin using RunUAT BuildPlugin.
