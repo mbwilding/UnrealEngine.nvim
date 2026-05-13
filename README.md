@@ -21,7 +21,7 @@ When you click on source files in Unreal Engine or use "Open in External Editor"
 
 ## Dependencies
 
-- Source version of Unreal Engine (not the launcher version)
+- **Source version of Unreal Engine (not the launcher version)** - required for `build_engine()`; `build_plugin()` works with both source and binary installs
 - clangd (Language Server Protocol)
 - Windows - LLVM (clang-cl): `winget install -e --id LLVM.LLVM`
 
@@ -79,6 +79,13 @@ return {
                 require("unrealengine.commands").build_engine()
             end,
             desc = "UnrealEngine: Link Plugin - Build Engine"
+        },
+        {
+            "<leader>up",
+            function()
+                require("unrealengine.commands").build_plugin()
+            end,
+            desc = "UnrealEngine: Build Plugin"
         },
     },
     -- Optional, this will update and build the Unreal Engine plugin on update
@@ -142,7 +149,10 @@ Removes generated files including:
 Launches Unreal Editor with your project. If `uproject_path` is set in options, it will launch with that specific project.
 
 ### `build_engine()`
-Links the `NeovimSourceCodeAccess` plugin into your Unreal Engine installation and builds it. This is how you install/update the Unreal Engine plugin component.
+Links the `NeovimSourceCodeAccess` plugin into your Unreal Engine installation and builds it. Requires a source build of Unreal Engine. This is how you install/update the Unreal Engine plugin component.
+
+### `build_plugin()`
+Builds just the `NeovimSourceCodeAccess` plugin using `RunUAT BuildPlugin`. This is faster than `build_engine()` and works with both source and binary (launcher) engine installs. The compiled plugin is installed directly into your engine's plugin directory.
 
 ## Unreal Engine Plugin Setup
 

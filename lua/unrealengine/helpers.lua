@@ -97,6 +97,16 @@ function M.get_build_script_path(opts)
     end
 end
 
+--- Gets the platform specific RunUAT script path
+---@param opts UnrealEngine.Opts Options table
+function M.get_uat_script_path(opts)
+    if jit.os == "Windows" then
+        return opts.engine_path .. "\\Engine\\Build\\BatchFiles\\RunUAT.bat"
+    else
+        return opts.engine_path .. "/Engine/Build/BatchFiles/RunUAT.sh"
+    end
+end
+
 --- Gets the platform specific engine binary
 ---@param opts UnrealEngine.Opts Options table
 function M.get_engine_binary_path(opts)
@@ -497,6 +507,24 @@ function M.link_plugin(opts)
     local src_dir, dst_dir = M.get_plugin_paths(opts)
     ensure_dir(vim.fn.fnamemodify(dst_dir, ":h"))
     M.symlink_file(src_dir, dst_dir)
+end
+
+--- Builds just the NeovimSourceCodeAccess plugin using RunUAT BuildPlugin.
+--- This is faster than building the full engine and works with binary engine installs.
+---@param opts UnrealEngine.Opts
+function M.build_plugin(opts)
+    local src_dir, dst_dir = M.get_plugin_paths(opts)
+    local uplugin_path = src_dir .. M.slash .. "NeovimSourceCodeAccess.uplugin"
+
+    ensure_dir(vim.fn.fnamemodify(dst_dir, ":h"))
+
+    local script = M.get_uat_script_path(opts)
+    local formatted_cmd = M.wrap(script)
+        .. " BuildPlugin"
+        .. " -Plugin=" .. M.wrap(uplugin_path)
+        .. " -Package=" .. M.wrap(dst_dir)
+
+    M.execute_command((jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd, opts)
 end
 
 --- Links plugin and builds the engine editor target which compiles the plugin too

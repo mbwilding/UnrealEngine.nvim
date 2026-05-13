@@ -27,6 +27,14 @@ function M.build_engine(opts)
     helpers.build_engine(opts)
 end
 
+--- Builds just the NeovimSourceCodeAccess plugin using RunUAT BuildPlugin.
+--- Works with both source and binary engine installs.
+---@param opts UnrealEngine.Opts|nil
+function M.build_plugin(opts)
+    opts = vim.tbl_deep_extend("force", engine.options, opts or {})
+    helpers.build_plugin(opts)
+end
+
 --- Opens the project in UE
 ---@param opts UnrealEngine.Opts|nil Options table
 function M.open(opts)
