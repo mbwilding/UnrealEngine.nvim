@@ -1,8 +1,5 @@
 local M = {}
 
---- Platform slash
-M.slash = jit.os == "Windows" and "\\" or "/"
-
 local find_uproject_cache = {}
 local current_build_job = nil
 local job_queue = {}
@@ -51,7 +48,7 @@ function M.validate_engine_path(engine_path)
         return engine_path
     end
 
-    error("Please set your engine_path opt")
+    error("engine_path does not exist or is not a directory: " .. engine_path)
 end
 
 --- Registers the Unreal Engine icon for .uproject and .uplugin files
@@ -91,9 +88,9 @@ end
 ---@param opts UnrealEngine.Opts Options table
 function M.get_build_script_path(opts)
     if jit.os == "Windows" then
-        return opts.engine_path .. "\\Engine\\Build\\BatchFiles\\Build.bat"
+        return vim.fs.joinpath(opts.engine_path, "Engine", "Build", "BatchFiles", "Build.bat")
     else
-        return opts.engine_path .. "/Engine/Build/BatchFiles/" .. M.get_platform() .. "/Build.sh"
+        return vim.fs.joinpath(opts.engine_path, "Engine", "Build", "BatchFiles", M.get_platform(), "Build.sh")
     end
 end
 
@@ -101,20 +98,23 @@ end
 ---@param opts UnrealEngine.Opts Options table
 function M.get_uat_script_path(opts)
     if jit.os == "Windows" then
-        return opts.engine_path .. "\\Engine\\Build\\BatchFiles\\RunUAT.bat"
+        return vim.fs.joinpath(opts.engine_path, "Engine", "Build", "BatchFiles", "RunUAT.bat")
     else
-        return opts.engine_path .. "/Engine/Build/BatchFiles/RunUAT.sh"
+        return vim.fs.joinpath(opts.engine_path, "Engine", "Build", "BatchFiles", "RunUAT.sh")
     end
 end
 
---- Gets the platform specific engine binary
+--- Gets the platform specific engine binary path
 ---@param opts UnrealEngine.Opts Options table
 function M.get_engine_binary_path(opts)
-    if jit.os == "Windows" then
-        return opts.engine_path .. "\\Engine\\Binaries\\" .. M.get_platform() .. "\\UnrealEditor.exe"
-    else
-        return opts.engine_path .. "/Engine/Binaries/" .. M.get_platform() .. "/UnrealEditor"
-    end
+    local binary = jit.os == "Windows" and "UnrealEditor.exe" or "UnrealEditor"
+    return vim.fs.joinpath(opts.engine_path, "Engine", "Binaries", M.get_platform(), binary)
+end
+
+--- Returns true if the engine at engine_path is a source build
+---@param opts UnrealEngine.Opts Options table
+function M.is_source_engine(opts)
+    return vim.loop.fs_stat(M.get_build_script_path(opts)) ~= nil
 end
 
 --- Retrieves information about the .uproject file in the current working directory
@@ -201,17 +201,8 @@ function M.symlink_file(src, dst)
     end
 end
 
---- Wraps the string in "
----@param value string The value to wrap in "
-function M.wrap(value)
-    if value == nil or value == "" then
-        return ""
-    end
-    return '"' .. value .. '"'
-end
-
 --- Executes the given command in a split buffer
----@param cmd string The command to run
+---@param cmd string[] The command and arguments to run
 ---@param opts UnrealEngine.Opts Options table
 ---@param on_complete? fun(opts: UnrealEngine.Opts) on_complete
 function M.execute_command(cmd, opts, on_complete)
@@ -285,12 +276,17 @@ end
 
 --- Executes the build script with provided args and options
 --- If a job is already running, queues the new job
----@param args string|nil The script args
+---@param args string[]|nil Extra args to pass to the build script
 ---@param opts UnrealEngine.Opts Options table.
 ---@param on_complete? fun(opts: UnrealEngine.Opts) on_complete
 function M.execute_build_script(args, opts, on_complete)
     if current_build_job then
         table.insert(job_queue, { args = args, opts = opts })
+        return
+    end
+
+    if not M.is_source_engine(opts) then
+        vim.notify("This command requires a source build of Unreal Engine. For binary installs, use build_plugin() instead.", vim.log.levels.ERROR)
         return
     end
 
@@ -302,23 +298,34 @@ function M.execute_build_script(args, opts, on_complete)
     end
 
     local cmd = {
-        M.wrap(script),
-        M.wrap(uproject.name .. "Editor"),
+        script,
+        uproject.name .. "Editor",
         M.get_platform(),
         opts.build_type or "Development",
-        (args or "") .. M.wrap(uproject.path),
-        "-game -engine",
-        (opts.with_editor and "-Editor " or ""),
     }
 
-    local cc_path = opts.engine_path .. M.slash .. "compile_commands.json"
+    if args then
+        for _, arg in ipairs(args) do
+            table.insert(cmd, arg)
+        end
+    end
+
+    vim.list_extend(cmd, { uproject.path, "-game", "-engine" })
+
+    if opts.with_editor then
+        table.insert(cmd, "-Editor")
+    end
+
+    local cc_path = vim.fs.joinpath(opts.engine_path, "compile_commands.json")
     if vim.loop.fs_stat(cc_path) then
         table.insert(cmd, "-NoExecCodeGenActions")
     end
 
-    local formatted_cmd = table.concat(cmd, " ")
+    if jit.os == "Windows" then
+        cmd = vim.list_extend({ "cmd", "/c" }, cmd)
+    end
 
-    M.execute_command((jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd, opts, on_complete)
+    M.execute_command(cmd, opts, on_complete)
 end
 
 --- Open Unreal Editor, if opts.uproject_path is set, it will launch with that project
@@ -327,30 +334,17 @@ function M.open_unreal_editor(opts)
     local engine_binary_path = M.get_engine_binary_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
 
-    ---@type string
-    local cmd
+    local cmd = { engine_binary_path }
     if uproject then
-        cmd = table.concat({
-            M.wrap(engine_binary_path),
-            M.wrap(uproject.path),
-        }, " ")
-    else
-        cmd = M.wrap(engine_binary_path)
+        table.insert(cmd, uproject.path)
     end
 
-    local environment_variables = ""
+    local job_opts = { detach = true }
     if opts.environment_variables and jit.os ~= "Windows" then
-        for k, v in pairs(opts.environment_variables) do
-            environment_variables = environment_variables .. k .. '="' .. v .. '" '
-        end
+        job_opts.env = opts.environment_variables
     end
 
-    if environment_variables then
-        cmd = environment_variables .. cmd
-    end
-
-    -- Start Unreal Engine
-    vim.fn.jobstart(cmd, { detach = true })
+    vim.fn.jobstart(cmd, job_opts)
 end
 
 --- Cleans the project by deleting generated files
@@ -380,14 +374,14 @@ function M.clean(opts)
     }
 
     for _, path in ipairs(root_paths_to_remove) do
-        local target = uproject.cwd .. M.slash .. path
+        local target = vim.fs.joinpath(uproject.cwd, path)
         vim.fn.delete(target, "rf")
     end
 
-    local engine_clangd = opts.engine_path .. M.slash .. ".clangd"
+    local engine_clangd = vim.fs.joinpath(opts.engine_path, ".clangd")
     vim.fn.delete(engine_clangd, "rf")
 
-    local plugins_dir = uproject.cwd .. M.slash .. "Plugins"
+    local plugins_dir = vim.fs.joinpath(uproject.cwd, "Plugins")
     if vim.fn.isdirectory(plugins_dir) == 1 then
         local scandir = vim.loop.fs_scandir(plugins_dir)
         if scandir then
@@ -396,11 +390,11 @@ function M.clean(opts)
                 if not name then
                     break
                 end
-                local current_object_path = plugins_dir .. M.slash .. name
+                local current_object_path = vim.fs.joinpath(plugins_dir, name)
                 if type == "directory" then
                     local plugin_path = current_object_path
                     for _, dir in ipairs(plugin_paths_to_remove) do
-                        local target = plugin_path .. M.slash .. dir
+                        local target = vim.fs.joinpath(plugin_path, dir)
                         vim.fn.delete(target, "rf")
                     end
                 else
@@ -421,7 +415,7 @@ Index:
   Background: Build
 ]]
 
-    local clangd_path = project_dir .. M.slash .. ".clangd"
+    local clangd_path = vim.fs.joinpath(project_dir, ".clangd")
     local file = io.open(clangd_path, "w")
     if file then
         file:write(clangd_content)
@@ -433,23 +427,19 @@ end
 ---@param opts UnrealEngine.Opts Options table
 function M.setup_clangd_files(opts)
     local clangd_file_name = ".clangd"
-    local clangd_source = opts.engine_path .. M.slash .. clangd_file_name
+    local clangd_source = vim.fs.joinpath(opts.engine_path, clangd_file_name)
     local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
 
     M.create_clangd_file(opts.engine_path)
-    M.symlink_file(clangd_source, uproject_dir .. M.slash .. clangd_file_name)
+    M.symlink_file(clangd_source, vim.fs.joinpath(uproject_dir, clangd_file_name))
 end
 
 --- Link clangd compile_commands.json to project and nested plugins
 ---@param opts UnrealEngine.Opts Options table
 function M.link_clangd_cc(opts)
-    local cc_file = "compile_commands.json"
-    cc_file = M.slash .. cc_file
-
-    local source = opts.engine_path .. cc_file
     local uproject_dir = (opts.uproject_path and vim.fn.fnamemodify(opts.uproject_path, ":h") or vim.loop.cwd())
-
-    M.symlink_file(source, uproject_dir .. cc_file)
+    local source = vim.fs.joinpath(opts.engine_path, "compile_commands.json")
+    M.symlink_file(source, vim.fs.joinpath(uproject_dir, "compile_commands.json"))
 end
 
 --- Ensure directory exists (mkdir -p)
@@ -465,7 +455,7 @@ end
 ---@param opts UnrealEngine.Opts
 ---@return string src_dir
 ---@return string dst_dir
----@return string uplugin_path
+---@return string src_uplugin_path
 function M.get_plugin_paths(opts)
     local plugin_name = "NeovimSourceCodeAccess"
     local category = "Developer"
@@ -476,16 +466,15 @@ function M.get_plugin_paths(opts)
     end
     local repo_root = vim.fn.fnamemodify(this_file, ":h:h:h")
 
-    local src_dir = table.concat({ repo_root, "Plugins", plugin_name }, M.slash)
+    local src_dir = vim.fs.joinpath(repo_root, "Plugins", plugin_name)
     if not vim.loop.fs_stat(src_dir) then
         error("Plugin source directory not found at: " .. src_dir)
     end
 
-    local engine_plugins_root = table.concat({ opts.engine_path, "Engine", "Plugins", category }, M.slash)
-    local dst_dir = table.concat({ engine_plugins_root, plugin_name }, M.slash)
-    local uplugin_path = table.concat({ dst_dir, plugin_name .. ".uplugin" }, M.slash)
+    local dst_dir = vim.fs.joinpath(opts.engine_path, "Engine", "Plugins", category, plugin_name)
+    local src_uplugin_path = vim.fs.joinpath(src_dir, plugin_name .. ".uplugin")
 
-    return src_dir, dst_dir, uplugin_path
+    return src_dir, dst_dir, src_uplugin_path
 end
 
 --- Returns true if the engine has the plugin symlinked to the given source
@@ -513,35 +502,32 @@ end
 --- This is faster than building the full engine and works with binary engine installs.
 ---@param opts UnrealEngine.Opts
 function M.build_plugin(opts)
-    local src_dir, dst_dir = M.get_plugin_paths(opts)
-    local uplugin_path = src_dir .. M.slash .. "NeovimSourceCodeAccess.uplugin"
+    local _, dst_dir, src_uplugin_path = M.get_plugin_paths(opts)
 
     ensure_dir(vim.fn.fnamemodify(dst_dir, ":h"))
 
     local script = M.get_uat_script_path(opts)
-    local formatted_cmd = M.wrap(script)
-        .. " BuildPlugin"
-        .. " -Plugin=" .. M.wrap(uplugin_path)
-        .. " -Package=" .. M.wrap(dst_dir)
-
-    M.execute_command((jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd, opts)
+    local cmd = { script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. dst_dir }
+    if jit.os == "Windows" then
+        cmd = vim.list_extend({ "cmd", "/c" }, cmd)
+    end
+    M.execute_command(cmd, opts)
 end
 
 --- Links plugin and builds the engine editor target which compiles the plugin too
 ---@param opts UnrealEngine.Opts
 function M.build_engine(opts)
+    if not M.is_source_engine(opts) then
+        vim.notify("build_engine() requires a source build of Unreal Engine. For binary installs, use build_plugin() instead.", vim.log.levels.ERROR)
+        return
+    end
     M.link_plugin(opts)
     local script = M.get_build_script_path(opts)
-    local cmd = {
-        M.wrap(script),
-        "UnrealEditor",
-        M.get_platform(),
-        opts.build_type or "Development",
-        "-engine",
-        "-Editor",
-    }
-    local formatted_cmd = table.concat(cmd, " ")
-    M.execute_command((jit.os == "Windows") and ("cmd /c " .. formatted_cmd) or formatted_cmd, opts)
+    local cmd = { script, "UnrealEditor", M.get_platform(), opts.build_type or "Development", "-engine", "-Editor" }
+    if jit.os == "Windows" then
+        cmd = vim.list_extend({ "cmd", "/c" }, cmd)
+    end
+    M.execute_command(cmd, opts)
 end
 
 return M

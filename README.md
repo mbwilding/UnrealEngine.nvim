@@ -152,7 +152,7 @@ Launches Unreal Editor with your project. If `uproject_path` is set in options, 
 Links the `NeovimSourceCodeAccess` plugin into your Unreal Engine installation and builds it. Requires a source build of Unreal Engine. This is how you install/update the Unreal Engine plugin component.
 
 ### `build_plugin()`
-Builds just the `NeovimSourceCodeAccess` plugin using `RunUAT BuildPlugin`. This is faster than `build_engine()` and works with both source and binary (launcher) engine installs. The compiled plugin is installed directly into your engine's plugin directory.
+Builds just the `NeovimSourceCodeAccess` plugin using `RunUAT BuildPlugin`. This is faster than `build_engine()` and works with both source and binary (launcher) engine installs. The compiled plugin output is placed in a `Package/` subdirectory alongside the plugin source.
 
 ## Unreal Engine Plugin Setup
 

@@ -9,7 +9,7 @@ function M.generate_lsp(opts)
     opts = vim.tbl_deep_extend("force", engine.options, opts or {})
     -- Setup .clangd files before running build script
     helpers.setup_clangd_files(opts)
-    helpers.execute_build_script("-mode=GenerateClangDatabase -project=", opts, helpers.link_clangd_cc)
+    helpers.execute_build_script({ "-mode=GenerateClangDatabase", "-project=" }, opts, helpers.link_clangd_cc)
 end
 
 --- Builds the project
