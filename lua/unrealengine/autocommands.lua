@@ -7,10 +7,10 @@ function M.auto_generate_lsp()
     vim.api.nvim_create_autocmd({ "VimEnter", "DirChanged" }, {
         callback = function()
             local cwd = vim.loop.cwd() or vim.fn.getcwd()
-            local compile_commands_path = cwd .. helpers.slash .. "compile_commands.json"
+            local compile_commands_path = vim.fs.joinpath(cwd, "compile_commands.json")
 
             if vim.loop.fs_stat(compile_commands_path) then
-                local clangd_path = cwd .. helpers.slash .. ".clangd"
+                local clangd_path = vim.fs.joinpath(cwd, ".clangd")
                 if not vim.loop.fs_stat(clangd_path) then
                     helpers.create_clangd_file(cwd)
                 end

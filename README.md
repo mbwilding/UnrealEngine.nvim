@@ -21,7 +21,7 @@ When you click on source files in Unreal Engine or use "Open in External Editor"
 
 ## Dependencies
 
-- Source version of Unreal Engine (not the launcher version)
+- Unreal Engine (source or binary/launcher install)
 - clangd (Language Server Protocol)
 - Windows - LLVM (clang-cl): `winget install -e --id LLVM.LLVM`
 
@@ -79,6 +79,13 @@ return {
                 require("unrealengine.commands").build_engine()
             end,
             desc = "UnrealEngine: Link Plugin - Build Engine"
+        },
+        {
+            "<leader>up",
+            function()
+                require("unrealengine.commands").build_plugin()
+            end,
+            desc = "UnrealEngine: Build Plugin"
         },
     },
     -- Optional, this will update and build the Unreal Engine plugin on update
@@ -142,7 +149,12 @@ Removes generated files including:
 Launches Unreal Editor with your project. If `uproject_path` is set in options, it will launch with that specific project.
 
 ### `build_engine()`
-Links the `NeovimSourceCodeAccess` plugin into your Unreal Engine installation and builds it. This is how you install/update the Unreal Engine plugin component.
+Installs the `NeovimSourceCodeAccess` plugin into your engine. Automatically detects the engine type:
+- **Source build**: symlinks the plugin and builds the full `UnrealEditor` target
+- **Binary (launcher) install**: uses `RunUAT BuildPlugin` to compile and install the plugin directly
+
+### `build_plugin()`
+Explicitly builds just the `NeovimSourceCodeAccess` plugin using `RunUAT BuildPlugin`. Works with both source and binary engine installs. Prefer `build_engine()` unless you specifically need to skip the source engine path.
 
 ## Unreal Engine Plugin Setup
 
@@ -202,4 +214,3 @@ To update the Unreal Engine plugin after updating the Neovim plugin:
 - **Files not opening in Neovim**: Make sure you launched Unreal Engine from Neovim (not directly), as the `NVIM` environment variable must be set
 - **LSP not working**: Run `generate_lsp()` to create `compile_commands.json` and `.clangd` configuration
 - **Plugin not found in Unreal Engine**: Run `build_engine()` to link and compile the plugin into your engine
-- **Build failures**: Ensure you're using the source version of Unreal Engine, not the launcher version
