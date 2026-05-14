@@ -293,7 +293,7 @@ function M.execute_build_script(args, opts, on_complete)
     local script = M.get_build_script_path(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
     if not uproject then
-        vim.notify("No uproject found", error)
+        vim.notify("No uproject found", vim.log.levels.ERROR)
         return
     end
 
@@ -352,7 +352,7 @@ end
 function M.clean(opts)
     local uproject = M.get_uproject_path_info(opts.uproject_path)
     if not uproject then
-        vim.notify("No uproject found", error)
+        vim.notify("No uproject found", vim.log.levels.ERROR)
         return
     end
 
