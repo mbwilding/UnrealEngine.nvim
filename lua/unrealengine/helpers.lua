@@ -382,6 +382,10 @@ function M.open_unreal_editor(opts)
         job_opts.env = env
     end
 
+    if jit.os == "Windows" then
+        cmd = to_windows_cmd(vim.list_extend({ "start", '""' }, cmd))
+    end
+
     vim.fn.jobstart(cmd, job_opts)
 end
 
