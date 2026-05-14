@@ -345,8 +345,12 @@ function M.open_unreal_editor(opts)
     end
 
     local job_opts = { detach = true }
-    if opts.environment_variables and jit.os ~= "Windows" then
-        job_opts.env = opts.environment_variables
+    if opts.environment_variables and jit.os ~= "Windows" and next(opts.environment_variables) then
+        local env = vim.fn.environ()
+        for k, v in pairs(opts.environment_variables) do
+            env[k] = v
+        end
+        job_opts.env = env
     end
 
     vim.fn.jobstart(cmd, job_opts)
