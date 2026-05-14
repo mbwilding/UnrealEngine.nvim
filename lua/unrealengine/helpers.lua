@@ -4,6 +4,28 @@ local find_uproject_cache = {}
 local current_build_job = nil
 local job_queue = {}
 
+--- Wraps a string in double quotes if it contains spaces
+---@param value string
+---@return string
+local function quote_if_needed(value)
+    if value:find(" ") then
+        return '"' .. value .. '"'
+    end
+    return value
+end
+
+--- On Windows, wraps a list-form command into { "cmd", "/c", "quoted shell string" }
+--- so that paths with spaces are handled correctly by cmd.exe
+---@param cmd string[]
+---@return string[]
+local function to_windows_cmd(cmd)
+    local quoted = {}
+    for _, arg in ipairs(cmd) do
+        table.insert(quoted, quote_if_needed(arg))
+    end
+    return { "cmd", "/c", table.concat(quoted, " ") }
+end
+
 --- Validates and returns a valid engine path
 ---@param directory string Directory
 function M.find_uproject(directory)
@@ -327,7 +349,7 @@ function M.execute_build_script(args, opts, on_complete)
     end
 
     if jit.os == "Windows" then
-        cmd = vim.list_extend({ "cmd", "/c" }, cmd)
+        cmd = to_windows_cmd(cmd)
     end
 
     M.execute_command(cmd, opts, on_complete)
@@ -521,7 +543,7 @@ function M.build_plugin(opts)
     local script = M.get_uat_script_path(opts)
     local cmd = { script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. build_dir }
     if jit.os == "Windows" then
-        cmd = vim.list_extend({ "cmd", "/c" }, cmd)
+        cmd = to_windows_cmd(cmd)
     end
     M.execute_command(cmd, opts, function()
         M.symlink_file(build_dir, dst_dir)
@@ -536,7 +558,7 @@ function M.build_engine(opts)
     local script = M.get_build_script_path(opts)
     local cmd = { script, "UnrealEditor", M.get_platform(), opts.build_type or "Development", "-engine", "-Editor" }
     if jit.os == "Windows" then
-        cmd = vim.list_extend({ "cmd", "/c" }, cmd)
+        cmd = to_windows_cmd(cmd)
     end
     M.execute_command(cmd, opts)
 end
