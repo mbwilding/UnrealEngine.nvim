@@ -4,6 +4,13 @@ local find_uproject_cache = {}
 local current_build_job = nil
 local job_queue = {}
 
+--- Converts forward slashes to backslashes (for Windows paths)
+---@param value string
+---@return string
+local function to_backslash(value)
+    return value:gsub("/", "\\")
+end
+
 --- Wraps a string in double quotes if it contains spaces
 ---@param value string
 ---@return string
@@ -15,13 +22,13 @@ local function quote_if_needed(value)
 end
 
 --- On Windows, wraps a list-form command into { "cmd", "/c", "quoted shell string" }
---- so that paths with spaces are handled correctly by cmd.exe
+--- Converts forward slashes to backslashes and quotes any args containing spaces.
 ---@param cmd string[]
 ---@return string[]
 local function to_windows_cmd(cmd)
     local quoted = {}
     for _, arg in ipairs(cmd) do
-        table.insert(quoted, quote_if_needed(arg))
+        table.insert(quoted, quote_if_needed(to_backslash(arg)))
     end
     return { "cmd", "/c", table.concat(quoted, " ") }
 end

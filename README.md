@@ -215,3 +215,8 @@ To update the Unreal Engine plugin after updating the Neovim plugin:
 - **LSP not working**: Run `generate_lsp()` to create `compile_commands.json` and `.clangd` configuration
 - **Plugin not found in Unreal Engine**: Run `build_engine()` to link and compile the plugin into your engine
 - **Build failures**: Ensure you're using the source version of Unreal Engine, not the launcher version
+- **260 character path limit (Windows)**: Unreal Engine's deep directory structure can exceed Windows' default 260-character path limit. Enable long path support by running the following in an elevated PowerShell session, then restart:
+  ```powershell
+  New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+  git config --global core.longpaths true
+  ```
