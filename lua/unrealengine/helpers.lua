@@ -260,7 +260,7 @@ function M.execute_command(cmd, opts, on_complete)
             end)
         end
 
-        if on_complete then
+        if exit_code == 0 and on_complete then
             on_complete(opts)
         end
     end
@@ -505,18 +505,23 @@ end
 
 --- Builds just the NeovimSourceCodeAccess plugin using RunUAT BuildPlugin.
 --- This is faster than building the full engine and works with binary engine installs.
+--- UAT requires -Package= to be outside the engine directory, so we build into
+--- src_dir/Build and then symlink that into the engine plugins directory.
 ---@param opts UnrealEngine.Opts
 function M.build_plugin(opts)
-    local _, dst_dir, src_uplugin_path = M.get_plugin_paths(opts)
+    local src_dir, dst_dir, src_uplugin_path = M.get_plugin_paths(opts)
 
+    local build_dir = vim.fs.joinpath(src_dir, "Build")
     ensure_dir(vim.fn.fnamemodify(dst_dir, ":h"))
 
     local script = M.get_uat_script_path(opts)
-    local cmd = { script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. dst_dir }
+    local cmd = { script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. build_dir }
     if jit.os == "Windows" then
         cmd = vim.list_extend({ "cmd", "/c" }, cmd)
     end
-    M.execute_command(cmd, opts)
+    M.execute_command(cmd, opts, function()
+        M.symlink_file(build_dir, dst_dir)
+    end)
 end
 
 --- Links plugin and builds the engine editor target which compiles the plugin too.
