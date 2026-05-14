@@ -306,7 +306,12 @@ function M.execute_build_script(args, opts, on_complete)
 
     if args then
         for _, arg in ipairs(args) do
-            table.insert(cmd, arg)
+            -- Args ending in = expect the uproject path appended directly (e.g. -project=)
+            if arg:sub(-1) == "=" then
+                table.insert(cmd, arg .. uproject.path)
+            else
+                table.insert(cmd, arg)
+            end
         end
     end
 
