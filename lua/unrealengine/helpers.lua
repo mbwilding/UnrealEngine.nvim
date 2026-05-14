@@ -489,6 +489,31 @@ local function ensure_dir(dir)
     vim.fn.mkdir(dir, "p")
 end
 
+--- Recursively copies a directory from src to dst using libuv
+---@param src string Source directory
+---@param dst string Destination directory
+local function copy_dir(src, dst)
+    ensure_dir(dst)
+    local handle = vim.loop.fs_scandir(src)
+    if not handle then
+        error("Failed to scan directory: " .. src)
+    end
+    while true do
+        local name, type = vim.loop.fs_scandir_next(handle)
+        if not name then break end
+        local src_path = vim.fs.joinpath(src, name)
+        local dst_path = vim.fs.joinpath(dst, name)
+        if type == "directory" then
+            copy_dir(src_path, dst_path)
+        else
+            local ok, err = vim.loop.fs_copyfile(src_path, dst_path)
+            if not ok then
+                error("Failed to copy file " .. src_path .. ": " .. err)
+            end
+        end
+    end
+end
+
 --- Computes plugin source and destination directories
 ---@param opts UnrealEngine.Opts
 ---@return string src_dir
@@ -544,17 +569,34 @@ end
 function M.build_plugin(opts)
     local src_dir, dst_dir, src_uplugin_path = M.get_plugin_paths(opts)
 
-    local build_dir = vim.fs.joinpath(src_dir, "Build")
     ensure_dir(vim.fn.fnamemodify(dst_dir, ":h"))
 
-    local script = M.get_uat_script_path(opts)
-    local cmd = { script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. build_dir }
     if jit.os == "Windows" then
-        cmd = to_windows_cmd(cmd)
+        local ok, err = pcall(copy_dir, src_dir, dst_dir)
+        if not ok then
+            vim.notify("Failed to copy plugin to engine: " .. err, vim.log.levels.ERROR)
+            return
+        end
+        local dst_uplugin_path = vim.fs.joinpath(dst_dir, "NeovimSourceCodeAccess.uplugin")
+        local temp_build_dir = vim.fs.joinpath(vim.fn.expand("$TEMP"), "UEPluginBuild")
+        vim.fn.delete(temp_build_dir, "rf")
+        local script = M.get_uat_script_path(opts)
+        local cmd = to_windows_cmd({ script, "BuildPlugin", "-Plugin=" .. dst_uplugin_path, "-Package=" .. temp_build_dir })
+        M.execute_command(cmd, opts, function()
+            vim.fn.delete(dst_dir, "rf")
+            local move_ok, move_err = vim.loop.fs_rename(temp_build_dir, dst_dir)
+            if not move_ok then
+                vim.notify("Failed to move plugin build to engine: " .. move_err, vim.log.levels.ERROR)
+            end
+        end)
+    else
+        local build_dir = vim.fs.joinpath(src_dir, "Build")
+        local script = M.get_uat_script_path(opts)
+        local cmd = { script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. build_dir }
+        M.execute_command(cmd, opts, function()
+            M.symlink_file(build_dir, dst_dir)
+        end)
     end
-    M.execute_command(cmd, opts, function()
-        M.symlink_file(build_dir, dst_dir)
-    end)
 end
 
 --- Links plugin and builds the engine editor target which compiles the plugin too.
