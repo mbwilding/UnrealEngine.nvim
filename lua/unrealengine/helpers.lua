@@ -594,7 +594,7 @@ function M.build_plugin(opts)
             end
         end)
     else
-        local build_dir = vim.fs.joinpath(src_dir, "Build")
+        local build_dir = vim.fs.joinpath(vim.fn.stdpath("data"), "unrealengine", "NeovimSourceCodeAccess")
         local script = M.get_uat_script_path(opts)
         local cmd = { script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. build_dir }
         M.execute_command(cmd, opts, function()
