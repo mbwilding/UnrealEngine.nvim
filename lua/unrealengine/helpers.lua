@@ -33,6 +33,16 @@ local function to_windows_cmd(cmd)
     return { "cmd", "/c", table.concat(quoted, " ") }
 end
 
+--- Wraps a shell script with bash on non-Windows so NixOS shebang issues are avoided
+---@param cmd string[]
+---@return string[]
+local function to_shell_cmd(cmd)
+    if jit.os == "Windows" then
+        return to_windows_cmd(cmd)
+    end
+    return vim.list_extend({ "bash" }, cmd)
+end
+
 --- Validates and returns a valid engine path
 ---@param directory string Directory
 function M.find_uproject(directory)
@@ -357,6 +367,8 @@ function M.execute_build_script(args, opts, on_complete)
 
     if jit.os == "Windows" then
         cmd = to_windows_cmd(cmd)
+    else
+        cmd = vim.list_extend({ "bash" }, cmd)
     end
 
     M.execute_command(cmd, opts, on_complete)
@@ -596,7 +608,7 @@ function M.build_plugin(opts)
     else
         local build_dir = vim.fs.joinpath(vim.fn.stdpath("data"), "unrealengine", "NeovimSourceCodeAccess")
         local script = M.get_uat_script_path(opts)
-        local cmd = { script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. build_dir }
+        local cmd = to_shell_cmd({ script, "BuildPlugin", "-Plugin=" .. src_uplugin_path, "-Package=" .. build_dir })
         M.execute_command(cmd, opts, function()
             M.symlink_file(build_dir, dst_dir)
         end)
@@ -609,10 +621,7 @@ end
 function M.build_engine(opts)
     M.link_plugin(opts)
     local script = M.get_build_script_path(opts)
-    local cmd = { script, "UnrealEditor", M.get_platform(), opts.build_type or "Development", "-engine", "-Editor" }
-    if jit.os == "Windows" then
-        cmd = to_windows_cmd(cmd)
-    end
+    local cmd = to_shell_cmd({ script, "UnrealEditor", M.get_platform(), opts.build_type or "Development", "-engine", "-Editor" })
     M.execute_command(cmd, opts)
 end
 
